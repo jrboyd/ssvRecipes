@@ -7,14 +7,50 @@ output: html_document
 knitr::opts_chunk$set(echo = TRUE)
 ```
 
-```{r libs}
+# Intro
+
+`ssvHeatmap2()` is meant to replace my heatmap.3 series of functions.
+
+It works in a friendly way with *seqsetvis*.  In fact the data in 
+heatmap_demo_matrix is a slice of `seqsetvis::CTCF_in_10a_profiles_dt` which
+was made with `seqsetvis::ssvFetchBam()`.  `ssvHeatmap2()` uses multiple
+functions from *seqsetvis*, particularly the clustering.
+
+# Setup
+
+```{r libs, message=FALSE}
 library(ggplot2)
 library(cowplot)
+library(seqsetvis)
+library(ssvRecipes)
+library(data.table)
 ```
 
+Quick demo of output before getting into details.
+
+```{r demo, message=FALSE, fig.width=8}
+dt = seqsetvis::CTCF_in_10a_profiles_dt
+#trimming the existing "_" is critical for ssvHeatmap2 to work
+dt[, sample := tstrsplit(sample, split = "_", keep = 1)]
+dt[, FE := y]
+resF = ssvHeatmap2(dt, fill_ = "FE")
+plot(resF)
+```
+
+# matrix as input
+
 ```{r load mat}
-library(ssvRecipes)
 mat = ssvRecipes::heatmap_demo_matrix
+head(mat)
+```
+
+Some colname adjustments to make plots look more "real"
+
+```{r}
+colnames(mat) = sub("A", "ctrl", colnames(mat))
+colnames(mat) = sub("B", "drug1", colnames(mat))
+colnames(mat) = sub("C", "drug2", colnames(mat))
+rownames(mat) = paste0("gene_", rownames(mat))
 head(mat)
 ```
 
@@ -31,9 +67,11 @@ res = ssvHeatmap2(mat)
 res
 ```
 
-Thanks for the help! TLDR.
+*Thanks for the help! TLDR.*
 
-But where is my heatmap!?
+*But where is my heatmap!?*
+
+You just need to call plot()
 
 ```{r}
 plot(res)
@@ -45,42 +83,73 @@ But I want to know what's in cluster 3!
 h.cluster_members(res)[[3]]
 ```
 
-But I want to rearrange things!
+*But I want to rearrange things!*
+
+The intermediate figure assembly objects are accessible.
 
 ```{r, fig.height=7, fig.width=4}
 p_groups = h.plot_parts_grouped(res)
-pg_top = plot_grid(p_groups$cluster_bars, p_groups$blank, p_groups$heatmap, rel_widths = c(.2, .05, 1), nrow = 1)
-pg_bottom = plot_grid(p_groups$cluster_bars, p_groups$cluster_connector, p_groups$cluster_aggregation, rel_widths = c(.2, .05, 1), nrow = 1)
+pg_top = plot_grid(p_groups$cluster_bars, p_groups$blank, p_groups$heatmap, rel_widths = c(.2, .1, 1), nrow = 1)
+pg_bottom = plot_grid(p_groups$cluster_bars, p_groups$cluster_connector, p_groups$cluster_aggregation, rel_widths = c(.2, .1, 1), nrow = 1)
 
 plot_grid(pg_top, pg_bottom, ncol = 1, scale = .8)
 ```
 
+*But I just want aggregate plots for cluster 3!*
+
+You can extract the individual ggplots before any assembly.
 
 ```{r}
+pp = h.plot_parts_individual(res)
+pp$clust_agg_3
+```
 
-# ssvHeatmap2(mat[,-2])
-# ssvHeatmap2(mat[,-(2:3)])
-# ssvHeatmap2(mat[,-(1:4)])
-# ssvHeatmap2(mat[,-(1:8)])
-# 
+*I want to do my own thing!*
 
-a = ssvHeatmap2(mat, side_plot_type = "lines1")
-plot(a)
-h.final_plot(a)
-h.cluster_members(a)
-h.cluster_data(a)
-h.plot_parts_grouped(a)[[4]]
-h.plot_parts_individual(a)[[6]]
-# ssvHeatmap2(mat, side_plot_type = "lines2", 
-#             side_plot_colors = safeBrew(8, "blues")[c(4,6,8)], 
-#             heatmap_colors = c("white", "black", "purple"))
-# ssvHeatmap2(mat, side_plot_type = "bars1",
-#             heatmap_colors = c("darkgreen", "white", "darkorange"),
-#             side_plot_colors = safeBrew(3, "Set1"))
-# ssvHeatmap2(mat, side_plot_type = "bars2",
-#             heatmap_colors = c("darkblue", "white", "darkred"),
-#             side_plot_colors = safeBrew(3, "Set2"))
+You can extract the data used to make these plots and do whatever.
+
+Here's a weird example.
+
+```{r}
+cdata = h.cluster_data(res)
+cdata = cdata[order(cluster_id)]
+grps = cdata[, paste(column, cluster_id)]
+grps = factor(grps, levels = unique(grps))
+boxplot(cdata$y ~ grps)
+```
+
+There are different built in side plot methods.
+
+The default:
+
+```{r}
+plot(ssvHeatmap2(mat))
+```
+
+A line alternative:
+
+```{r}
+plot(ssvHeatmap2(mat, side_plot_type = "lines2",
+            side_plot_colors = safeBrew(8, "blues")[c(4,6,8)],
+            heatmap_colors = c("white", "black", "purple")))
+```
+
+Barplots:
+
+```{r}
+plot(ssvHeatmap2(mat, side_plot_type = "bars1",
+            heatmap_colors = c("darkgreen", "white", "darkorange"),
+            side_plot_colors = safeBrew(3, "Set1")))
+```
+
+Another barplot style:
+
+```{r}
+plot(ssvHeatmap2(mat, side_plot_type = "bars2",
+            heatmap_colors = c("darkblue", "white", "darkred"),
+            side_plot_colors = safeBrew(3, "Set2")))
 
 
 ```
+
 

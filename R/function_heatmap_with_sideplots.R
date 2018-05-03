@@ -201,6 +201,26 @@ ssvHeatmap2 = function(
     heatmap_colors = rev(safeBrew(5, pal = "spectral")),
     side_plot_colors = NULL
 ){
+    if(is.data.frame(mat)){
+        if(all(c(row_, column_) %in% colnames(mat))){
+            #mat is a tidy data.frame
+            dt = data.table::as.data.table(mat)
+        }else if(all(c(row_, treatment_, replicate_) %in% colnames(mat))){
+            dt = data.table::as.data.table(mat)
+            dt[[column_]] = paste(sep = "_", dt[[treatment_]], dt[[replicate_]])
+        }
+        else{
+            #mat is a wide data.frame
+            dt = data.table::as.data.table(mat)
+            stopifnot(is.character(rownames(mat)))
+            dt[[row_]] = rownames(mat)
+            # if(is.null(dt[[column_]])){
+            #     stopifnot(all(c(treatment_, replicate_) %in% colnames(mat)))
+            #     dt[[column_]] = paste(sep = "_", dt[[treatment_]], dt[[replicate_]])
+            # }
+            dt = data.table::melt(dt, id.vars = row_, variable.name = column_, value.name = fill_)
+        }
+    }
     if(is.matrix(mat)){
         #STEP 1 - start here with real data
         #reformat wide matrix to tidy/tall data.table
@@ -209,21 +229,17 @@ ssvHeatmap2 = function(
         dt = data.table::melt(dt, id.vars = row_, variable.name = column_, value.name = fill_)
         #dt is now a tidy data.table
     }
-    if(is.data.frame(mat)){
-        if(all(c(row_, column_) %in% colnames(mat))){
-            #mat is a tidy data.frame
-            dt = data.table::as.data.table(mat)
-        }else{
-            #mat is a wide data.frame
-            dt = data.table::as.data.table(mat)
-            dt[[row_]] = rownames(mat)
-            dt = data.table::melt(dt, id.vars = row_, variable.name = column_, value.name = fill_)
-        }
-    }
+
     stopifnot(class(dt)[1] == "data.table")
     stopifnot(all(c(row_, column_) %in% colnames(dt)))
     #extract grouping info
-    dt[, c(treatment_, replicate_) := data.table::tstrsplit(get(column_), "_")]
+    if(is.null(dt[[treatment_]])){
+        dt[, c(treatment_) := data.table::tstrsplit(get(column_), "_", keep = 1)]
+    }
+    if(is.null(dt[[replicate_]])){
+        dt[, c(replicate_) := data.table::tstrsplit(get(column_), "_", keep = 2)]
+    }
+
     stopifnot(all(c(treatment_, replicate_) %in% colnames(dt)))
     stopifnot(fill_ %in% colnames(dt))
 
