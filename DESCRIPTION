@@ -1,0 +1,19 @@
+Package: ssvRecipes
+Type: Package
+Title: Recipes using seqsetvis
+Version: 0.1.0
+Authors@R: person("Joseph R", "Boyd", email = "jrboyd@uvm.edu",
+                  role = c("aut", "cre"))
+Description: More about what it does (maybe more than one line)
+    Use four spaces when indenting paragraphs within the Description.
+License: MIT + file LICENSE
+Encoding: UTF-8
+LazyData: true
+Depends: 
+    ggplot2
+Imports:
+    data.table,
+    cowplot,
+    seqsetvis
+RoxygenNote: 6.0.1
+biocViews: Software, ChIPSeq, Sequencing, Visualization

@@ -1,0 +1,80 @@
+---
+title: "ssvHeatmap2"
+output: html_document
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE)
+```
+
+```{r load mat}
+library(ssvRecipes)
+mat = ssvRecipes::heatmap_demo_matrix
+head(mat)
+```
+
+Note that mat is a matrix with rownames and colnames set.
+Format for colnames is very specific - they must have *a single* underscore "_".
+
+The contents preceding the "_" define how samples are grouped.
+
+The contents following the "_" are mostly for tracking but should be unique per 
+sample group.
+
+```{r}
+res = ssvHeatmap2(mat)
+res
+```
+
+Thanks for the help! TLDR.
+
+But where is my heatmap!?
+
+```{r}
+plot(res)
+```
+
+But I want to know what's in cluster 3!
+
+```{r}
+h.cluster_members(res)[[3]]
+```
+
+But I want to rearrange things!
+
+```{r}
+p_groups = h.plot_parts_grouped(res)
+plot_grid(p_groups[[2]], p_groups[[1]], rel_widths = c(.2, 1))
+
+
+```
+
+
+```{r}
+
+# ssvHeatmap2(mat[,-2])
+# ssvHeatmap2(mat[,-(2:3)])
+# ssvHeatmap2(mat[,-(1:4)])
+# ssvHeatmap2(mat[,-(1:8)])
+# 
+
+a = ssvHeatmap2(mat, side_plot_type = "lines1")
+plot(a)
+h.final_plot(a)
+h.cluster_members(a)
+h.cluster_data(a)
+h.plot_parts_grouped(a)[[4]]
+h.plot_parts_individual(a)[[6]]
+# ssvHeatmap2(mat, side_plot_type = "lines2", 
+#             side_plot_colors = safeBrew(8, "blues")[c(4,6,8)], 
+#             heatmap_colors = c("white", "black", "purple"))
+# ssvHeatmap2(mat, side_plot_type = "bars1",
+#             heatmap_colors = c("darkgreen", "white", "darkorange"),
+#             side_plot_colors = safeBrew(3, "Set1"))
+# ssvHeatmap2(mat, side_plot_type = "bars2",
+#             heatmap_colors = c("darkblue", "white", "darkred"),
+#             side_plot_colors = safeBrew(3, "Set2"))
+
+
+```
+
