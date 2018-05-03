@@ -7,6 +7,11 @@ output: html_document
 knitr::opts_chunk$set(echo = TRUE)
 ```
 
+```{r libs}
+library(ggplot2)
+library(cowplot)
+```
+
 ```{r load mat}
 library(ssvRecipes)
 mat = ssvRecipes::heatmap_demo_matrix
@@ -42,11 +47,12 @@ h.cluster_members(res)[[3]]
 
 But I want to rearrange things!
 
-```{r}
+```{r, fig.height=7, fig.width=4}
 p_groups = h.plot_parts_grouped(res)
-plot_grid(p_groups[[2]], p_groups[[1]], rel_widths = c(.2, 1))
+pg_top = plot_grid(p_groups$cluster_bars, p_groups$blank, p_groups$heatmap, rel_widths = c(.2, .05, 1), nrow = 1)
+pg_bottom = plot_grid(p_groups$cluster_bars, p_groups$cluster_connector, p_groups$cluster_aggregation, rel_widths = c(.2, .05, 1), nrow = 1)
 
-
+plot_grid(pg_top, pg_bottom, ncol = 1, scale = .8)
 ```
 
 

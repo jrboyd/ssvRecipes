@@ -157,6 +157,8 @@ h.plot_parts_individual = function(ssvH2){
 #' @param mat numeric matrix with row and column names set.  see details.
 #' @param group_space_size numeric >=0. size of white space separating heatmap
 #' groups. Default is 0.1
+#' @param main_heights numeric of length 4.  controls size of heatmap
+#' body, axis ticks, group labels, and scale portion.
 #' @param treatment_ name of conditions/treatment groups.  appears in plots.
 #' @param replicate_ name of replicate identifier.  appears in plots.
 #' @param column_ name of heatmap column variable - no effect if supplying mat
@@ -187,6 +189,7 @@ h.plot_parts_individual = function(ssvH2){
 ssvHeatmap2 = function(
     mat,
     group_space_size = .1,
+    main_heights = c(8, 1, 2, 2),
     treatment_ = "sample",
     replicate_ = "x",
     column_ = "column",
@@ -307,8 +310,6 @@ ssvHeatmap2 = function(
     pg_plots = plot_spaced_grid(plotlist = ppanels, group_space_size)
     pg_xaxis = plot_spaced_grid(plotlist = pxaxis, group_space_size)
     pg_labels = plot_spaced_labels(plabels = grps, group_space_size)
-
-    main_heights = c(9, .6, 1, 2)
 
     pg_main = plot_grid(pg_plots,
                         pg_xaxis,
