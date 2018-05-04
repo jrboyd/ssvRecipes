@@ -245,18 +245,24 @@ ssvHeatmap2 = function(
 
     #STEP 2 - clustering
     #perform clustering
-    clust = ssvSignalClustering(dt, nclust = nclust, column_ = column_, fill_ = fill_, row_ = row_)
+    clust = seqsetvis::ssvSignalClustering(dt,
+                                           nclust = nclust,
+                                           column_ = column_,
+                                           fill_ = fill_,
+                                           row_ = row_,
+                                           max_rows = Inf,
+                                           max_cols = Inf)
 
-    clust$xmin = as.numeric(clust[[column_]])-1
-    clust[, xmax := xmin + 1]
-
-    clust$ymin = as.numeric(clust[[row_]])-1
-    clust[, ymax := ymin + 1]
+    # clust$xmin = as.numeric(clust[[column_]])-1
+    # clust[, xmax := xmin + 1]
+    #
+    # clust$ymin = as.numeric(clust[[row_]])-1
+    # clust[, ymax := ymin + 1]
 
     #STEP 3 - heatmap figure parts
     grps = unique(dt[[treatment_]])
 
-    fill_lim = range(dt$y)
+    fill_lim = range(dt[[fill_]])
     p_groups = lapply(grps, function(g){
         p = ggplot(clust[get(treatment_) == g]) +
             geom_raster(aes_string(x = replicate_, y = row_, fill = fill_)) +

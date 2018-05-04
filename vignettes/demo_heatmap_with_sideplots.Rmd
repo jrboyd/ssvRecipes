@@ -16,6 +16,12 @@ heatmap_demo_matrix is a slice of `seqsetvis::CTCF_in_10a_profiles_dt` which
 was made with `seqsetvis::ssvFetchBam()`.  `ssvHeatmap2()` uses multiple
 functions from *seqsetvis*, particularly the clustering.
 
+# Installation
+
+```{r, eval=FALSE}
+devtools::install("jrboyd/seqsetvis")
+```
+
 # Setup
 
 ```{r libs, message=FALSE}
@@ -26,15 +32,40 @@ library(ssvRecipes)
 library(data.table)
 ```
 
-Quick demo of output before getting into details.
+Quick demos of output before getting into details.
+
+ChIP-seq:
 
 ```{r demo, message=FALSE, fig.width=8}
 dt = seqsetvis::CTCF_in_10a_profiles_dt
 #trimming the existing "_" is critical for ssvHeatmap2 to work
 dt[, sample := tstrsplit(sample, split = "_", keep = 1)]
 dt[, FE := y]
-resF = ssvHeatmap2(dt, fill_ = "FE")
-plot(resF)
+resChIP = ssvHeatmap2(dt, fill_ = "FE", main_title = "ChIP-seq demo")
+plot(resChIP)
+```
+
+```{r}
+dt_rna = melt(dt_rna, id.vars = "Id")
+#Fix SF style colnames
+dt_rna[, sample := tstrsplit(variable, "\\.", keep = 2)]
+dt_rna[, sample := sub("dF4", "", sample)]
+dt_rna[, sample := sub("r", "_r", sample)]
+dt_rna[, log2Value := log2(value+1)]
+
+resRna = ssvHeatmap2(dt_rna, main_title = "RNA-seq demo", group_space_size = 0,
+                     row_ = "Id", 
+                     treatment_ = "treat", 
+                     column_ = "sample", 
+                     fill_ = "log2Value", 
+                     heatmap_colors = c("slategray", safeBrew(5, "reds")[4:5]))
+plot(resRna)
+```
+
+20 random genes from cluster 1
+
+```{r}
+sample(h.cluster_members(resRna)[[1]], 20)
 ```
 
 # matrix as input
@@ -129,7 +160,7 @@ plot(ssvHeatmap2(mat))
 A line alternative:
 
 ```{r}
-plot(ssvHeatmap2(mat, side_plot_type = "lines2",
+plot(ssvHeatmap2(mat, side_plot_type = "lines2", 
             side_plot_colors = safeBrew(8, "blues")[c(4,6,8)],
             heatmap_colors = c("white", "black", "purple")))
 ```
