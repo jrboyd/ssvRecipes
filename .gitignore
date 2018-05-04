@@ -5,3 +5,4 @@
 mat.save
 vignettes/*html
 vignettes/*files
+vignettes/*cache

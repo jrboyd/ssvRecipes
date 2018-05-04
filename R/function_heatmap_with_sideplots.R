@@ -155,10 +155,16 @@ h.plot_parts_individual = function(ssvH2){
 #' rownames must be set and be unique.
 #'
 #' @param mat numeric matrix with row and column names set.  see details.
-#' @param group_space_size numeric >=0. size of white space separating heatmap
+#' @param treatment_ordering order used for columns and side plots.  default NULL
+#' causes order of supplied data to be used.
+#' @param replicate_ordering order used for sub columns and side plots ticks.
+#' default NULL causes order of supplied data to be used.
+#' @param treatment_space_size numeric >=0. size of white space separating heatmap
 #' groups. Default is 0.1
 #' @param main_heights numeric of length 4.  controls size of heatmap
 #' body, axis ticks, group labels, and scale portion.
+#' @param main_widths numeric of length 5.  controls size of heatmap
+#' body, spacer, cluster bars, cluster connector, and aggregate plots
 #' @param treatment_ name of conditions/treatment groups.  appears in plots.
 #' @param replicate_ name of replicate identifier.  appears in plots.
 #' @param column_ name of heatmap column variable - no effect if supplying mat
@@ -188,8 +194,11 @@ h.plot_parts_individual = function(ssvH2){
 #' plot(res)
 ssvHeatmap2 = function(
     mat,
-    group_space_size = .1,
+    treatment_ordering = NULL,
+    replicate_ordering = NULL,
+    treatment_space_size = .1,
     main_heights = c(8, 1, 2, 2),
+    main_widths = c(2, .1, .2, .2, 1.8),
     treatment_ = "sample",
     replicate_ = "x",
     column_ = "column",
@@ -243,6 +252,8 @@ ssvHeatmap2 = function(
     stopifnot(all(c(treatment_, replicate_) %in% colnames(dt)))
     stopifnot(fill_ %in% colnames(dt))
 
+
+
     #STEP 2 - clustering
     #perform clustering
     clust = seqsetvis::ssvSignalClustering(dt,
@@ -260,10 +271,28 @@ ssvHeatmap2 = function(
     # clust[, ymax := ymin + 1]
 
     #STEP 3 - heatmap figure parts
-    grps = unique(dt[[treatment_]])
+
+
+    if(is.null(treatment_ordering)){
+        treatment_ordering = unique(dt[[treatment_]])
+    }else{
+        #treatment_ordering must cover all treatment_
+        stopifnot(all(sort(unique(dt[[treatment_]])) == sort(treatment_ordering)))
+    }
+    clust[[treatment_]] = factor(clust[[treatment_]], levels = treatment_ordering)
+
+    if(is.character(dt[[replicate_]]) || is.factor(dt[[replicate_]])){
+        if(is.null(replicate_ordering)){
+            replicate_ordering = unique(dt[[replicate_]])
+        }else{
+            #replicate_ordering must cover all replicate_
+            stopifnot(all(sort(unique(dt[[replicate_]])) == sort(replicate_ordering)))
+        }
+        clust[[replicate_]] = factor(clust[[replicate_]], levels = replicate_ordering)
+    }
 
     fill_lim = range(dt[[fill_]])
-    p_groups = lapply(grps, function(g){
+    p_groups = lapply(treatment_ordering, function(g){
         p = ggplot(clust[get(treatment_) == g]) +
             geom_raster(aes_string(x = replicate_, y = row_, fill = fill_)) +
             scale_fill_gradientn(colours = heatmap_colors, limits = fill_lim) +
@@ -271,7 +300,7 @@ ssvHeatmap2 = function(
             coord_cartesian(expand = FALSE)
         p
     })
-    names(p_groups) = paste0("heatmap_", grps)
+    names(p_groups) = paste0("heatmap_", treatment_ordering)
     plegend = get_legend(p_groups[[1]] +  theme(legend.position = "bottom",
                                                 legend.direction = "horizontal",
                                                 legend.justification = "center"))
@@ -302,7 +331,7 @@ ssvHeatmap2 = function(
 
     #weight widths by group size
     unique(clust[, .(get(treatment_), get(replicate_))])
-    rel_widths = vapply(grps, function(grp_)length(unique(clust[get(treatment_) == grp_][[replicate_]])), FUN.VALUE = 1)
+    rel_widths = vapply(treatment_ordering, function(grp_)length(unique(clust[get(treatment_) == grp_][[replicate_]])), FUN.VALUE = 1)
     rel_widths = rel_widths / sum(rel_widths)
 
     plot_spaced_grid = function(plotlist, spacer = .1){
@@ -329,9 +358,9 @@ ssvHeatmap2 = function(
         plot_grid(plotlist = plist, nrow = 1, rel_widths = w)
     }
 
-    pg_plots = plot_spaced_grid(plotlist = ppanels, group_space_size)
-    pg_xaxis = plot_spaced_grid(plotlist = pxaxis, group_space_size)
-    pg_labels = plot_spaced_labels(plabels = grps, group_space_size)
+    pg_plots = plot_spaced_grid(plotlist = ppanels, treatment_space_size)
+    pg_xaxis = plot_spaced_grid(plotlist = pxaxis, treatment_space_size)
+    pg_labels = plot_spaced_labels(plabels = treatment_ordering, treatment_space_size)
 
     pg_main = plot_grid(pg_plots,
                         pg_xaxis,
@@ -371,11 +400,11 @@ ssvHeatmap2 = function(
 
     #aggregated line plots
     if(is.null(side_plot_colors)){
-        side_plot_colors = safeBrew(length(grps))
+        side_plot_colors = safeBrew(length(treatment_ordering))
     }
-    stopifnot(length(side_plot_colors) == length(grps))
+    stopifnot(length(side_plot_colors) == length(treatment_ordering))
     if(is.null(names(side_plot_colors))){
-        names(side_plot_colors) = grps
+        names(side_plot_colors) = treatment_ordering
     }
 
 
@@ -450,7 +479,7 @@ ssvHeatmap2 = function(
                        pg_clust,
                        pg_connect,
                        pg_agg,
-                       rel_widths = c(2, .1, .2, .2, 1.8), nrow = 1)
+                       rel_widths = main_widths, nrow = 1)
 
     pg_final = plot_grid(pg_all, scale = .9, labels = main_title)
 
