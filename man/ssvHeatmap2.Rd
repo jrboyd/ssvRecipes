@@ -4,21 +4,31 @@
 \alias{ssvHeatmap2}
 \title{seqsetvis improved Heatmap}
 \usage{
-ssvHeatmap2(mat, group_space_size = 0.1, main_heights = c(8, 1, 2, 2),
-  treatment_ = "sample", replicate_ = "x", column_ = "column",
-  row_ = "id", fill_ = "y", nclust = 5, main_title = "Heatmap",
-  side_plot_type = c("lines1", "lines2", "bars1", "bars2")[1],
-  heatmap_colors = rev(safeBrew(5, pal = "spectral")),
-  side_plot_colors = NULL)
+ssvHeatmap2(mat, treatment_ordering = NULL, replicate_ordering = NULL,
+  treatment_space_size = 0.1, main_heights = c(8, 1, 2, 2),
+  main_widths = c(2, 0.1, 0.2, 0.2, 1.8), treatment_ = "sample",
+  replicate_ = "x", column_ = "column", row_ = "id", fill_ = "y",
+  nclust = 5, main_title = "Heatmap", side_plot_type = c("lines1",
+  "lines2", "bars1", "bars2")[1], heatmap_colors = rev(safeBrew(5, pal =
+  "spectral")), side_plot_colors = NULL)
 }
 \arguments{
 \item{mat}{numeric matrix with row and column names set.  see details.}
 
-\item{group_space_size}{numeric >=0. size of white space separating heatmap
+\item{treatment_ordering}{order used for columns and side plots.  default NULL
+causes order of supplied data to be used.}
+
+\item{replicate_ordering}{order used for sub columns and side plots ticks.
+default NULL causes order of supplied data to be used.}
+
+\item{treatment_space_size}{numeric >=0. size of white space separating heatmap
 groups. Default is 0.1}
 
 \item{main_heights}{numeric of length 4.  controls size of heatmap
 body, axis ticks, group labels, and scale portion.}
+
+\item{main_widths}{numeric of length 5.  controls size of heatmap
+body, spacer, cluster bars, cluster connector, and aggregate plots}
 
 \item{treatment_}{name of conditions/treatment groups.  appears in plots.}
 

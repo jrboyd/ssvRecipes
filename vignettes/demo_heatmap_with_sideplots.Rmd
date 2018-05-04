@@ -1,10 +1,19 @@
 ---
 title: "ssvHeatmap2"
-output: html_document
+author: "Joseph R Boyd"
+output:
+  BiocStyle::html_document:
+    toc_float: true
+vignette: >
+    %\VignetteIndexEntry{ssvHeatmap2}
+    %\VignetteEngine{knitr::rmarkdown}
+    %\VignetteEncoding{UTF-8}
 ---
+
 
 ```{r setup, include=FALSE}
 knitr::opts_chunk$set(echo = TRUE)
+knitr::opts_chunk$set(cache = TRUE)
 ```
 
 # Intro
@@ -18,13 +27,13 @@ functions from *seqsetvis*, particularly the clustering.
 
 # Installation
 
-```{r, eval=FALSE}
+```{r install, eval=FALSE}
 #you need seqsetvis
 source("https://bioconductor.org/biocLite.R")
 biocLite("seqsetvis")
 #if still on R 3.4 :
 #devtools::install("jrboyd/seqsetvis", ref = "R3.4")
-devtools::install("jrboyd/ssvRecipes")
+devtools::install_github("jrboyd/ssvRecipes")
 ```
 
 # Setup
@@ -51,14 +60,14 @@ plot(resChIP)
 ```
 
 ```{r}
-dt_rna = melt(dt_rna, id.vars = "Id")
+dt_rna = melt(ssvRecipes::dt_rna, id.vars = "Id")
 #Fix SF style colnames
 dt_rna[, sample := tstrsplit(variable, "\\.", keep = 2)]
 dt_rna[, sample := sub("dF4", "", sample)]
 dt_rna[, sample := sub("r", "_r", sample)]
 dt_rna[, log2Value := log2(value+1)]
 
-resRna = ssvHeatmap2(dt_rna, main_title = "RNA-seq demo", group_space_size = 0,
+resRna = ssvHeatmap2(dt_rna, main_title = "RNA-seq demo", treatment_space_size = 0,
                      row_ = "Id", 
                      treatment_ = "treat", 
                      column_ = "sample", 
@@ -113,6 +122,8 @@ You just need to call plot()
 plot(res)
 ```
 
+# Parts of Output
+
 But I want to know what's in cluster 3!
 
 ```{r}
@@ -154,17 +165,19 @@ grps = factor(grps, levels = unique(grps))
 boxplot(cdata$y ~ grps)
 ```
 
+# Side Plot Methods
+
 There are different built in side plot methods.
 
 The default:
 
-```{r}
-plot(ssvHeatmap2(mat))
+```{r sp lines1}
+plot(ssvHeatmap2(mat, side_plot_type = "lines1"))
 ```
 
 A line alternative:
 
-```{r}
+```{r sp lines2}
 plot(ssvHeatmap2(mat, side_plot_type = "lines2", 
             side_plot_colors = safeBrew(8, "blues")[c(4,6,8)],
             heatmap_colors = c("white", "black", "purple")))
@@ -172,7 +185,7 @@ plot(ssvHeatmap2(mat, side_plot_type = "lines2",
 
 Barplots:
 
-```{r}
+```{r sp bars1}
 plot(ssvHeatmap2(mat, side_plot_type = "bars1",
             heatmap_colors = c("darkgreen", "white", "darkorange"),
             side_plot_colors = safeBrew(3, "Set1")))
@@ -180,7 +193,7 @@ plot(ssvHeatmap2(mat, side_plot_type = "bars1",
 
 Another barplot style:
 
-```{r}
+```{r sp bars2}
 plot(ssvHeatmap2(mat, side_plot_type = "bars2",
             heatmap_colors = c("darkblue", "white", "darkred"),
             side_plot_colors = safeBrew(3, "Set2")))
@@ -188,4 +201,71 @@ plot(ssvHeatmap2(mat, side_plot_type = "bars2",
 
 ```
 
+# Tweaking The Figure
 
+The basic, again
+
+```{r}
+plot(ssvHeatmap2(mat))
+```
+
+This figure is composed of 4 rows and 5 columns.  The relative size of each is 
+controlled by 2 numberic vectors `main_heights` and `main_widths`.
+
+Here's how it breaks down:
+
+| 1            | 2      | 3             | 4                 | 5           |         
+|:------------:|:------:|:-------------:|:-----------------:|:-----------:|
+| heatmap      | spacer | boxes  | connector | side plots  |
+| column ticks | spacer | spacer        | spacer            | spacer      |
+| group labels | spacer | spacer        | spacer            | spacer      |
+| fill scale   | spacer | spacer        | spacer            | side legend |
+
+
+
+Vertically Smoosh the plot to make more room for legends
+
+```{r vert smoosh}
+plot(ssvHeatmap2(mat, main_heights = c(.6, .1, .2, .8)))
+```
+
+Horizontally smoosh heatmap to increase side plot size.
+
+```{r horiz smoosh}
+plot(ssvHeatmap2(mat, main_widths = c(.6, .1, .2, .8, 2)))
+```
+
+# Ordering Columns
+
+Two paramters, `treatment_ordering` and `replicate_ordering` allow manual
+specification of column order.
+
+```{r manual order}
+resRna = ssvHeatmap2(dt_rna, 
+                     treatment_ordering = c("M", "U", "M40"),
+                     replicate_ordering = c("r2", "r1", "r3"),
+                     main_title = "RNA-seq demo - manual order", 
+                     treatment_space_size = 0,
+                     row_ = "Id", 
+                     treatment_ = "treat", 
+                     column_ = "sample", 
+                     fill_ = "log2Value", 
+                     heatmap_colors = c("slategray", safeBrew(5, "reds")[4:5]))
+plot(resRna)
+```
+
+When these ordering parameters are omitted, the default is to use the order
+in which data appears in the input.  For instance, reversing the order of 
+data.table rows reverses the heatmap and sideplot columns.
+
+```{r flip order}
+resRna = ssvHeatmap2(dt_rna[rev(seq_len(nrow(dt_rna)))], 
+                     main_title = "RNA-seq demo - flipped order", 
+                     treatment_space_size = 0,
+                     row_ = "Id", 
+                     treatment_ = "treat", 
+                     column_ = "sample", 
+                     fill_ = "log2Value", 
+                     heatmap_colors = c("slategray", safeBrew(5, "reds")[4:5]))
+plot(resRna)
+```
