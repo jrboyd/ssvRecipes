@@ -19,7 +19,12 @@ functions from *seqsetvis*, particularly the clustering.
 # Installation
 
 ```{r, eval=FALSE}
-devtools::install("jrboyd/seqsetvis")
+#you need seqsetvis
+source("https://bioconductor.org/biocLite.R")
+biocLite("seqsetvis")
+#if still on R 3.4 :
+#devtools::install("jrboyd/seqsetvis", ref = "R3.4")
+devtools::install("jrboyd/ssvRecipes")
 ```
 
 # Setup

@@ -3,3 +3,5 @@
 .RData
 .Ruserdata
 mat.save
+vignettes/*html
+vignettes/*files
