@@ -235,7 +235,7 @@ Horizontally smoosh heatmap to increase side plot size.
 plot(ssvHeatmap2(mat, main_widths = c(.6, .1, .2, .8, 2)))
 ```
 
-# Ordering Columns
+# Ordering Columns 
 
 Two paramters, `treatment_ordering` and `replicate_ordering` allow manual
 specification of column order.
