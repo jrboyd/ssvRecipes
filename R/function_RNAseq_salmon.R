@@ -155,10 +155,15 @@ salmon_index_transcriptome = function(seq_path = HG38_SEQ_PATH,
 #' @param fastq_paths paths to fastq files (ungzipped?)
 #' @param out_dirs directories to put results in per fastq
 #'
-#' @return
+#' @return list with paths to output directories and job ids
 #' @export
 #'
 #' @examples
+#' #nonsense without some toy data
+#' \dontrun{
+#' salmon_quant_fastq_SE(index_path, fastq_paths)
+#' }
+#'
 salmon_quant_fastq_SE = function(index_path,
                                  fastq_paths,
                                  p = 8,
