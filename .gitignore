@@ -6,3 +6,11 @@ mat.save
 vignettes/*html
 vignettes/*files
 vignettes/*cache
+salmon_index.*
+gencode*
+tmp*
+submit_salmon_index.sh
+.cache
+quant_*
+salmon_quant_*
+submit_salmon_*
