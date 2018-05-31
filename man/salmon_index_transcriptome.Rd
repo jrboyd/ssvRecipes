@@ -7,7 +7,7 @@
 salmon_index_transcriptome(seq_path = HG38_SEQ_PATH,
   gtf_path = HG38_v28_GTF_URL, gtf_to_fasta_path = GTF_TO_FASTA_PATH,
   salmon_path = SALMON_PATH, output_transcriptome = NULL,
-  output_index = NULL, cache_path = ".cache", use_qsub = TRUE,
+  output_index = NULL, cache_path = "~/.cache", use_qsub = TRUE,
   do_submit = TRUE)
 }
 \arguments{

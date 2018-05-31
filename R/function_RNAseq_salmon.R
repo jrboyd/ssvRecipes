@@ -6,19 +6,7 @@
 # HG38_SEQ_PATH = "/slipstream/galaxy/data/hg38/seq/hg38full.fa"
 # fastq_paths = dir("~/R/JR_FLC_RNAseq_cross_promoter_capture/data_JR_RNAseq/fastqs/", full.names = TRUE)
 
-#' is_url
-#'
-#' check if character f is a valid URL
-#'
-#' @param f a character possibly containing a URL
-#'
-#' @return TRUE if f looks like a URL
-#' @export
-#'
-#' @examples
-#' is_url("not_a_url")
-#' is_url("ftp://is_a_url")
-is_url = function(f){grepl("://", f)}
+
 
 #' salmon_index_transcriptome
 #'
@@ -49,7 +37,7 @@ salmon_index_transcriptome = function(seq_path = HG38_SEQ_PATH,
                                       salmon_path = SALMON_PATH,
                                       output_transcriptome = NULL,
                                       output_index = NULL,
-                                      cache_path = ".cache",
+                                      cache_path = "~/.cache",
                                       use_qsub = TRUE,
                                       do_submit = TRUE){
     tmp_trans = paste0("tmp.", output_transcriptome)
@@ -69,24 +57,30 @@ salmon_index_transcriptome = function(seq_path = HG38_SEQ_PATH,
         output_index = f
     }
 
-    if(is_url(gtf_path)){
-        gtf_path = BiocFileCache::bfcrpath(bfc, gtf_path)
-    }
-    if(is_url(seq_path)){
-        seq_path = BiocFileCache::bfcrpath(bfc, seq_path)
-    }
-    if(grepl(".gz$", gtf_path)){ #gunzip if necessary
-        rname = paste0(basename(gtf_path), ",unzip")
-        if(!any(BiocFileCache::bfcinfo(bfc)$rname == rname)){ #dl if necessary
-            gtf_raw = readLines(gzfile(gtf_path))
-            gtf_file = BiocFileCache::bfcnew(bfc, rname = paste0(basename(gtf_path), ",unzip"))
-            writeLines(gtf_raw, con = gtf_file)
-            gtf_path = gtf_file
-        }else{ # use existing resource
-            gtf_path = BiocFileCache::bfcrpath(bfc, rnames = rname)
-        }
 
-    }
+    # if(is_url(seq_path)){
+    #     seq_path = BiocFileCache::bfcrpath(bfc, seq_path)
+    # }
+    print(seq_path)
+    seq_path = cache_gz(bfc, seq_path)
+    print(gtf_path)
+    gtf_path = cache_gz(bfc, gtf_path)
+
+    # if(is_url(gtf_path)){
+    #     gtf_path = BiocFileCache::bfcrpath(bfc, gtf_path)
+    # }
+    # if(grepl(".gz$", gtf_path)){ #gunzip if necessary
+    #     rname = paste0(basename(gtf_path), ",unzip")
+    #     if(!any(BiocFileCache::bfcinfo(bfc)$rname == rname)){ #dl if necessary
+    #         gtf_raw = readLines(gzfile(gtf_path))
+    #         gtf_file = BiocFileCache::bfcnew(bfc, rname = paste0(basename(gtf_path), ",unzip"))
+    #         writeLines(gtf_raw, con = gtf_file)
+    #         gtf_path = gtf_file
+    #     }else{ # use existing resource
+    #         gtf_path = BiocFileCache::bfcrpath(bfc, rnames = rname)
+    #     }
+    #
+    # }
     tmp_trans = paste0("tmp.", basename(output_transcriptome))
 
     # log_file = paste0(output_transcriptome, ".log")
@@ -150,6 +144,7 @@ salmon_index_transcriptome = function(seq_path = HG38_SEQ_PATH,
 #' salmon_quant_fastq_SE
 #'
 #' runs salmon quant using specified transcriptome index on every fastq supplied
+#' for single-end reads only
 #'
 #' @param index_path path to index file
 #' @param fastq_paths paths to fastq files (ungzipped?)

@@ -1,0 +1,182 @@
+---
+title: "rnaseq_analysis"
+author: "Joe Boyd"
+date: "5/31/2018"
+output: html_document
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE)
+```
+
+## Setup
+
+```{r libs, message=FALSE, warning=FALSE}
+library(ssvRecipes)
+library(DESeq2)
+library(data.table)
+library(cowplot)
+```
+
+```{r files}
+fastq_paths = dir("~/R/JR_FLC_RNAseq_cross_promoter_capture/data_JR_RNAseq/fastqs/", full.names = TRUE)
+```
+
+## Count Based
+
+### Align 
+
+```{r alignment, message=FALSE}
+align_out = star_align_fastq_SE(fastq_paths, out_path = "~/R/JR_FLC_RNAseq_cross_promoter_capture/data_JR_RNAseq/alignments/")
+hold_jids = align_out$job_ids
+wait_jids(hold_jids)
+```
+
+### Count
+
+```{r count, message=FALSE}
+bams = sapply(align_out$result_paths, function(root){
+    dir(dirname(root), pattern = paste0(basename(root), ".+\\.bam$"), full.names = TRUE)
+})
+se = counts_from_bams(bams, counts_tag = "vignette_counts")
+se
+```
+
+Result is a `r class(se)[1]`
+
+Cleanup and set colData
+
+```{r cleanup}
+colnames(se) = sub("\\..+", "", basename(colnames(se)))
+sampleTable = as.data.frame(matrix(unlist(strsplit(colnames(se), "_")), byrow = TRUE, nrow = length(bams)))
+colnames(sampleTable) = c("condition", "rep", "sid")
+rownames(sampleTable) = colnames(se)
+colData(se) = DataFrame(sampleTable)
+```
+
+Apply a weak count filter.
+
+```{r filter}
+se = se[ rowSums(assay(se)) >= ncol(se), ]
+```
+
+### DESeq2
+
+```{r de setup}
+dds = DESeqDataSet(se, ~ condition)
+```
+
+```{r de model, collapse=TRUE, results="hold"}
+des <- DESeq(dds)
+```
+
+```{r prep pair}
+conds = levels(sampleTable$condition)
+padj_cut = .05
+lgfc_cut = 1
+
+de_out = function(count_data, de_res, de_name){
+    mat_down = as.data.table(melt(count_data[de_res$rn,, drop = FALSE]))
+    colnames(mat_down) = c("id", "sample", "count")
+    mat_down[, "log2_counts" := log2(count + 1)]
+    mat_down[, x := tstrsplit(sample, "_", keep = 2)]
+    mat_down[, sample := tstrsplit(sample, "_", keep = 1)]
+    if(nrow(de_res) > 10){
+        hres_down = ssvHeatmap2(mat_down, 
+                                main_title = de_name, 
+                                fill_ = "log2_counts")
+        p = plot(hres_down)
+    }else{
+        p_mat = mat_down[, .(mean = mean(count), sd = sd(count)), by = .(id, sample)]
+        p = ggplot(p_mat, aes(fill = sample, y = mean, x = sample)) + 
+                geom_bar(stat = "identity") +
+            geom_errorbar(aes(ymin = mean - sd, ymax = mean + sd), width = .2)
+        p = p + facet_wrap("id") + theme_minimal() + labs(title = de_name)
+    }
+    p
+}
+```
+
+Getting the normalized counts.
+
+```{r counts out}
+countData = counts(des, normalized = TRUE)
+head(countData)
+```
+
+Perform pairwise DE
+
+```{r}
+len = length(conds)
+todo = data.table(i = rep(seq_len(len), each = len), j = rep(seq_len(len), len))
+todo = todo[i < j]
+de_dt_list = lapply(seq_len(nrow(todo)), function(td){
+    i = todo[td]$i
+    j = todo[td]$j
+    a = conds[i]
+    b = conds[j]
+    print(paste(a, "vs", b))
+    res <- results(des, contrast=c("condition",a,b)) ## contrast specifies conditions to be tested
+    res <- res[complete.cases(res),]
+    resOrdered <- res[order(res$padj),]
+    # write.table(resOrdered, paste0("DESeq2_", a, "_vs_", b, "_Full.txt"), sep = "\t", quote = FALSE)
+    resSig <- subset(resOrdered, padj < padj_cut)
+    resSig = as.data.table(as.data.frame(resSig), keep.rownames = TRUE)
+    resSig
+})
+
+names(de_dt_list) = paste(conds[todo$i], "vs", conds[todo$j])
+de_dt = rbindlist(de_dt_list, use.names = TRUE, idcol = "pair")
+de_dt[, c("from", "to") := tstrsplit(pair, " ", keep = c(3,1))]
+de_dt$pair = NULL
+de_dt = rbind(de_dt, de_dt[, .(rn, baseMean, log2FoldChange = -log2FoldChange, lfcSE, stat, pvalue, padj, from = to, to = from)])
+```
+
+```{r}
+myplot = function(td){
+a = conds[todo[td]$i]
+b = conds[todo[td]$j]
+de_p = de_dt[from == a & to == b & log2FoldChange > 0]
+p_up = de_out(count_data = countData, 
+              de_res = de_p, 
+              de_name = paste0("UP n= ", nrow(de_p)))
+de_p = de_dt[from == a & to == b & log2FoldChange < 0]
+p_down = de_out(countData, de_p, paste0("DOWN n= ", nrow(de_p)))    
+plot_grid(p_up, p_down, scale = .9) + cowplot::draw_text(paste0("from ", a, " to ", b, "."), y = 1, vjust = 1, size = 16)
+}
+```
+
+```{r, fig.width=14, fig.height=6}
+myplot(1)
+```
+
+```{r, fig.width=14, fig.height=6}
+myplot(2)
+```
+
+```{r, fig.width=14, fig.height=6}
+myplot(3)
+```
+
+```{r, fig.width=14, fig.height=6}
+myplot(4)
+```
+
+```{r, fig.width=14, fig.height=6}
+myplot(5)
+```
+
+### PCA
+
+vst = Variance Stabilizing Transformation
+
+This is important, otherwise:
+
+* linear-scale highly expressed genes will dominate variance
+* log-scale lowly expressed genes will dominate variance
+
+```{r}
+vsd <- vst(dds)
+plotPCA(vsd, "condition", ntop = 5000)
+```
+
