@@ -14,3 +14,5 @@ submit_salmon_index.sh
 quant_*
 salmon_quant_*
 submit_salmon_*
+vignettes/STAR*
+vignettes/submit*

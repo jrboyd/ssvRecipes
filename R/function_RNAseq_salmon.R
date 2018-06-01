@@ -100,8 +100,11 @@ salmon_index_transcriptome = function(seq_path = HG38_SEQ_PATH,
     cmd_index = sub("OUT_VAR", output_transcriptome_gz, cmd_index)
     cmd_index = sub("INDEX_VAR", output_index, cmd_index)
 
-    for(f in c(tmp_trans, output_transcriptome, output_transcriptome_gz, output_index)){
-        if(file.exists(f) | dir.exists(f))warning(f, " exists, not remaking.  delete to override.")
+    # for(f in c(tmp_trans, output_transcriptome, output_transcriptome_gz, output_index)){
+    #     if(file.exists(f) | dir.exists(f))warning(f, " exists, not remaking.  delete to override.")
+    # }
+    if(any(file.exists(c(tmp_trans, output_transcriptome, output_transcriptome_gz, output_index)))){
+        warning("Delete old results to override.")
     }
 
     all_cmds =  c(
@@ -120,6 +123,8 @@ salmon_index_transcriptome = function(seq_path = HG38_SEQ_PATH,
         bash_lines = c("#!/bin/bash",
                        "#$ -N salmon_index",
                        "#$ -cwd",
+                       paste("#$ -e", cache_path),
+                       paste("#$ -o", cache_path),
                        # paste0("#", cmd_gtf_fasta))
                        all_cmds)
 
@@ -186,6 +191,8 @@ salmon_quant_fastq_SE = function(index_path,
         bash_lines = c("#!/bin/bash",
                        paste0("#$ -N salmon_quant_", i),
                        "#$ -cwd",
+                       paste("#$ -e", out_dirs[i]),
+                       paste("#$ -o", out_dirs[i]),
                        paste("#$ -pe threads", p),
                        cmd_this)
         submit_file = paste0("submit_salmon_quant_", i, ".sh")
@@ -207,3 +214,23 @@ salmon_quant_fastq_SE = function(index_path,
     }
     return(list(quant_results = out_dirs, job_ids = all_hjid))
 }
+
+#' Title
+#'
+#' @param sf_files
+#' @param gtf_path
+#' @param cache_path
+#'
+#' @return
+#' @export
+#'
+#' @examples
+salmon_tx_quant = function(sf_files, gtf_path = HG38_v28_GTF_URL, cache_path = "~/.cache"){
+    bfc = BiocFileCache::BiocFileCache(cache_path)
+    gtf_path = cache_gz(bfc, gtf_path)
+    ref_gr = rtracklayer::import.gff(gtf_path, feature.type = "transcript", format = "gtf")
+    tx2gene = data.frame(TXNAME = ref_gr$transcript_id, GENEID = ref_gr$gene_id)
+    txi <- tximport::tximport(sf_files, type = "salmon", tx2gene = tx2gene)
+    return(txi)
+}
+

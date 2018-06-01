@@ -32,7 +32,7 @@ hold_jids = align_out$job_ids
 wait_jids(hold_jids)
 ```
 
-### Count
+### Read Counting
 
 ```{r count, message=FALSE}
 bams = sapply(align_out$result_paths, function(root){
@@ -180,3 +180,30 @@ vsd <- vst(dds)
 plotPCA(vsd, "condition", ntop = 5000)
 ```
 
+## Transcript Quantification
+
+```{r salmon index}
+idx_res = salmon_index_transcriptome()
+wait_jids(idx_res$job_id)
+```
+
+```{r salon quant}
+quant_res =  salmon_quant_fastq_SE(idx_res$index_path, fastq_paths, out_path = "~/R/JR_FLC_RNAseq_cross_promoter_capture/data_JR_RNAseq/quants/")
+wait_jids(quant_res$job_id)
+```
+
+```{r sf}
+sf_files = dir(quant_res$quant_results, pattern = "quant.sf", full.names = TRUE)
+names(sf_files) = sub("\\..+", "", basename(fastq_paths))
+```
+
+```{r}
+txi = salmon_tx_quant(sf_files)
+```
+
+```{r}
+sampleTable <- data.frame(condition = factor(sub("_.+", "", colnames(txi$counts))))
+rownames(sampleTable) <- colnames(txi$counts)
+dds <- DESeqDataSetFromTximport(txi, sampleTable, ~condition)
+dds
+```
