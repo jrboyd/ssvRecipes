@@ -116,13 +116,16 @@ star_align_fastq_SE = function(fastq_paths,
     return(list(result_paths = out_dirs, job_ids = all_hjid))
 }
 
-bam_plot_dt = function(bam_paths, qgr){
+bam_plot_dt = function(bam_paths, qgr, flip_strand = TRUE){
     pos_bam = ssvFetchBam(file_paths = bam_paths, qgr = qgr, target_strand = "+", return_data.table = TRUE, fragLens = NA)
     neg_bam = ssvFetchBam(file_paths = bam_paths, qgr = qgr, target_strand = "-", return_data.table = TRUE, fragLens = NA)
 
-    #strands seem flipped
-    pos_bam$strand = "-"
-    neg_bam$strand = "+"
+    if(flip_strand){
+        #strands seem flipped
+        pos_bam$strand = "-"
+        neg_bam$strand = "+"
+    }
+
     bam_dt = rbind(pos_bam, neg_bam)
     bam_dt
 }

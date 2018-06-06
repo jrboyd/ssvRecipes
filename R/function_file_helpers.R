@@ -42,6 +42,7 @@ is_gz = function(f){
 #'
 #' @return path to gunzipped resource in cache
 #' @export
+#' @import BiocFileCache
 #'
 #' @examples
 cache_gz = function(x, path){
@@ -159,4 +160,27 @@ watch_jids = function(hold_jids, interval = 5, watch_prefix = "watching"){
     }else{
         message(watch_prefix, " : ", "finished!")
     }
+}
+
+#' Write gr to bigbed file
+#'
+#' @param gr gr to save
+#' @param bedf name of intermediate bedfiles
+#' @param bbf name of final output bigbed file
+#' @param chrSizes chrSizes file to use, default is hg38
+#' @param cleanup_beds remove beds when done? TRUE
+#'
+#' @return path to big bed file
+#' @export
+#'
+#' @examples
+writeBigBed = function(gr, bbf, bedf = sub("\\.bb$", "\\.bed", bbf), chrSizes = "~/hg38_chrsizes.txt", cleanup_beds = TRUE){
+    rtracklayer::export.bed(gr, bedf)
+    system(paste("bedSort", bedf, paste0(bedf, ".sorted")), intern = TRUE)
+    system(paste("bedToBigBed", paste0(bedf, ".sorted"), chrSizes, bbf), intern = TRUE)
+    if(cleanup_beds){
+        file.remove(bedf)
+        file.remove(paste0(bedf, ".sorted"))
+    }
+    bbf
 }

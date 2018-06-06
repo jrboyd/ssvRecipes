@@ -6,11 +6,12 @@
 \usage{
 ssvHeatmap2(mat, treatment_ordering = NULL, replicate_ordering = NULL,
   treatment_space_size = 0.1, main_heights = c(8, 1, 2, 2),
-  main_widths = c(2, 0.1, 0.2, 0.2, 1.8), treatment_ = "sample",
-  replicate_ = "x", column_ = "column", row_ = "id", fill_ = "y",
-  nclust = 5, main_title = "Heatmap", side_plot_type = c("lines1",
-  "lines2", "bars1", "bars2")[1], heatmap_colors = rev(safeBrew(5, pal =
-  "spectral")), side_plot_colors = NULL)
+  main_widths = c(2, 0.1, 0.2, 0.2, 1.8), cluster_ = "cluster_id",
+  treatment_ = "sample", replicate_ = "x", column_ = "column",
+  row_ = "id", fill_ = "y", nclust = 5, main_title = "Heatmap",
+  side_plot_type = c("lines1", "lines2", "bars1", "bars2")[1],
+  side_plot_FUN = NULL, heatmap_colors = rev(safeBrew(5, pal = "spectral")),
+  side_plot_colors = NULL)
 }
 \arguments{
 \item{mat}{numeric matrix with row and column names set.  see details.}
@@ -49,6 +50,11 @@ matrix.}
 
 \item{side_plot_type}{plotting method for aggregate side plots.
 one of c("lines1", "lines2", "bars1", "bars2").}
+
+\item{side_plot_FUN}{overrides sideplot type. supplied function is executed
+once per cluster and must return a ggplot. call is:
+side_plot_FUN(clust, i, fill_, replicate_, treatment_, cluster_, side_plot_colors)
+Where clust is a tidy data.table containing 4 variables_, i is cluster id.}
 
 \item{heatmap_colors}{colors for heatmap, default uses spectral palette
 from color brewer.}
