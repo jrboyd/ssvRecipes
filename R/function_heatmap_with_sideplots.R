@@ -177,6 +177,10 @@ h.plot_parts_individual = function(ssvH2){
 #' @param main_title title appearing above assembled figure.
 #' @param side_plot_type plotting method for aggregate side plots.
 #' one of c("lines1", "lines2", "bars1", "bars2").
+#' @param side_plot_FUN overrides sideplot type. supplied function is executed
+#' once per cluster and must return a ggplot. call is:
+#' side_plot_FUN(clust, i, fill_, replicate_, treatment_, cluster_, side_plot_colors)
+#' Where clust is a tidy data.table containing 4 variables_, i is cluster id.
 #' @param heatmap_colors colors for heatmap, default uses spectral palette
 #' from color brewer.
 #' @param side_plot_colors colors for side_plot.
@@ -199,6 +203,7 @@ ssvHeatmap2 = function(
     treatment_space_size = .1,
     main_heights = c(8, 1, 2, 2),
     main_widths = c(2, .1, .2, .2, 1.8),
+    cluster_ = "cluster_id",
     treatment_ = "sample",
     replicate_ = "x",
     column_ = "column",
@@ -207,9 +212,20 @@ ssvHeatmap2 = function(
     nclust = 5,
     main_title = "Heatmap",
     side_plot_type = c("lines1", "lines2", "bars1", "bars2")[1],
+    side_plot_FUN = NULL,
     heatmap_colors = rev(safeBrew(5, pal = "spectral")),
     side_plot_colors = NULL
 ){
+    if(length(unique(c(cluster_, treatment_, replicate_, column_, row_, fill_))) != 6){
+        stop("variable names must be unique:",
+             "\n  cluster_ = ",cluster_,
+             "\n  treatment_ = ",treatment_,
+             "\n  replicate_ = ",replicate_,
+             "\n  column_ = ",column_,
+             "\n  row_ = ",row_,
+             "\n  fill_ = ",fill_
+        )
+    }
     if(is.data.frame(mat)){
         if(all(c(row_, column_) %in% colnames(mat))){
             #mat is a tidy data.frame
@@ -222,7 +238,10 @@ ssvHeatmap2 = function(
             #mat is a wide data.frame
             dt = data.table::as.data.table(mat)
             stopifnot(is.character(rownames(mat)))
-            dt[[row_]] = rownames(mat)
+            if(is.null(dt[[row_]])){
+                dt[[row_]] = rownames(mat)
+            }
+
             # if(is.null(dt[[column_]])){
             #     stopifnot(all(c(treatment_, replicate_) %in% colnames(mat)))
             #     dt[[column_]] = paste(sep = "_", dt[[treatment_]], dt[[replicate_]])
@@ -241,6 +260,11 @@ ssvHeatmap2 = function(
 
     stopifnot(class(dt)[1] == "data.table")
     stopifnot(all(c(row_, column_) %in% colnames(dt)))
+    if(sum(duplicated(paste(dt[[column_]], dt[[row_]]))) > 0){
+        stop("There are duplicated values when combining row_ and column_. ",
+             "This is most likely due to duplicated row names or ",
+             "column names in supplied matrix.")
+    }
     #extract grouping info
     if(is.null(dt[[treatment_]])){
         dt[, c(treatment_) := data.table::tstrsplit(get(column_), "_", keep = 1)]
@@ -256,13 +280,20 @@ ssvHeatmap2 = function(
 
     #STEP 2 - clustering
     #perform clustering
-    clust = seqsetvis::ssvSignalClustering(dt,
-                                           nclust = nclust,
-                                           column_ = column_,
-                                           fill_ = fill_,
-                                           row_ = row_,
-                                           max_rows = Inf,
-                                           max_cols = Inf)
+    if(is.null(dt[[cluster_]])){
+        clust = seqsetvis::ssvSignalClustering(dt,
+                                               nclust = nclust,
+                                               column_ = column_,
+                                               fill_ = fill_,
+                                               row_ = row_,
+                                               max_rows = Inf,
+                                               max_cols = Inf,
+                                               facet_ = "")
+    }else{
+        clust = dt
+    }
+
+
 
     # clust$xmin = as.numeric(clust[[column_]])-1
     # clust[, xmax := xmin + 1]
@@ -274,24 +305,30 @@ ssvHeatmap2 = function(
 
 
     if(is.null(treatment_ordering)){
-        treatment_ordering = unique(dt[[treatment_]])
+        treatment_ordering = unique(clust[[treatment_]])
+        if(is.factor(treatment_ordering)){
+            treatment_ordering = droplevels(treatment_ordering)
+        }
     }else{
         #treatment_ordering must cover all treatment_
-        stopifnot(all(sort(unique(dt[[treatment_]])) == sort(treatment_ordering)))
+        stopifnot(all(sort(unique(clust[[treatment_]])) == sort(treatment_ordering)))
     }
     clust[[treatment_]] = factor(clust[[treatment_]], levels = treatment_ordering)
 
-    if(is.character(dt[[replicate_]]) || is.factor(dt[[replicate_]])){
+    if(is.character(clust[[replicate_]]) || is.factor(clust[[replicate_]])){
         if(is.null(replicate_ordering)){
-            replicate_ordering = unique(dt[[replicate_]])
+            replicate_ordering = unique(clust[[replicate_]])
+            if(is.factor(replicate_ordering)){
+                replicate_ordering = droplevels(replicate_ordering)
+            }
         }else{
             #replicate_ordering must cover all replicate_
-            stopifnot(all(sort(unique(dt[[replicate_]])) == sort(replicate_ordering)))
+            stopifnot(all(sort(unique(clust[[replicate_]])) == sort(replicate_ordering)))
         }
         clust[[replicate_]] = factor(clust[[replicate_]], levels = replicate_ordering)
     }
 
-    fill_lim = range(dt[[fill_]])
+    fill_lim = range(clust[[fill_]])
     p_groups = lapply(treatment_ordering, function(g){
         p = ggplot(clust[get(treatment_) == g]) +
             geom_raster(aes_string(x = replicate_, y = row_, fill = fill_)) +
@@ -372,7 +409,7 @@ ssvHeatmap2 = function(
 
     #bars indicating cluster identity
     #an internal seqsetvis function does most of this already
-    pclust = seqsetvis:::add_cluster_annotation(clust$cluster_id) +
+    pclust = seqsetvis:::add_cluster_annotation(clust[[cluster_]]) +
         coord_cartesian(expand = FALSE) + theme_nothing()
 
     pg_clust = plot_grid(pclust,
@@ -382,7 +419,7 @@ ssvHeatmap2 = function(
                          rel_heights = main_heights, ncol = 1)
 
     #lines connect cluster bars to line plots
-    line_start = c(0, cumsum(table(clust$cluster_id)))
+    line_start = c(0, cumsum(table(clust[[cluster_]])))
 
     line_end = sapply(0:nclust, function(i){
         i * max(line_start) / nclust
@@ -409,50 +446,56 @@ ssvHeatmap2 = function(
 
 
     gg_agg = function(clust, plot_type = c("lines1", "lines2", "bars1", "bars2")[1]){
-        agg = clust[, .(agg_fill = mean(get(fill_))), by = c(treatment_, replicate_, "cluster_id")]
+        agg = clust[, .(agg_fill = mean(get(fill_))), by = c(treatment_, replicate_, cluster_)]
 
-        agg_lim = range(agg$agg_fill)
-
-        agg_plots = lapply(seq_len(nclust), function(i){
-            p = switch(plot_type,
-                       lines1 = {
-                           ggplot(agg[cluster_id == i]) +
-                               geom_line(aes_string(x = replicate_,
-                                                    y = "agg_fill",
-                                                    color = treatment_,
-                                                    group = treatment_)) +
-                               facet_wrap(treatment_, nrow = 1)
-                       },
-                       lines2 = {
-                           ggplot(agg[cluster_id == i]) +
-                               geom_line(aes_string(x = replicate_,
-                                                    y = "agg_fill",
-                                                    color = treatment_,
-                                                    group = treatment_))
-                       },
-                       bars1 = {
-                           ggplot(agg[cluster_id == i]) +
-                               geom_bar(aes_string(x = replicate_,
-                                                   y = "agg_fill",
-                                                   fill = treatment_,
-                                                   group = treatment_),
-                                        stat = "identity") +
-                               facet_wrap(treatment_, nrow = 1)
-                       },
-                       bars2 = {
-                           ggplot(agg[cluster_id == i]) +
-                               geom_bar(aes_string(x = replicate_,
-                                                   y = "agg_fill",
-                                                   fill = treatment_),
-                                        stat = "identity", position = "dodge")
-                       })
-            p = p +
-                scale_y_continuous(limits = agg_lim) +
-                theme(legend.position = "bottom",
-                      legend.direction = "horizontal",
-                      legend.justification = "center") +
-                scale_color_manual(values = side_plot_colors)
-        })
+        agg_lim = c(0, max(agg$agg_fill))
+        if(is.null(side_plot_FUN)){
+            agg_plots = lapply(seq_len(nclust), function(i){
+                p = switch(plot_type,
+                           lines1 = {
+                               ggplot(agg[get(cluster_) == i]) +
+                                   geom_line(aes_string(x = replicate_,
+                                                        y = "agg_fill",
+                                                        color = treatment_,
+                                                        group = treatment_)) +
+                                   facet_wrap(treatment_, nrow = 1)
+                           },
+                           lines2 = {
+                               ggplot(agg[get(cluster_) == i]) +
+                                   geom_line(aes_string(x = replicate_,
+                                                        y = "agg_fill",
+                                                        color = treatment_,
+                                                        group = treatment_))
+                           },
+                           bars1 = {
+                               ggplot(agg[get(cluster_) == i]) +
+                                   geom_bar(aes_string(x = replicate_,
+                                                       y = "agg_fill",
+                                                       fill = treatment_,
+                                                       group = treatment_),
+                                            stat = "identity") +
+                                   facet_wrap(treatment_, nrow = 1)
+                           },
+                           bars2 = {
+                               ggplot(agg[get(cluster_) == i]) +
+                                   geom_bar(aes_string(x = replicate_,
+                                                       y = "agg_fill",
+                                                       fill = treatment_),
+                                            stat = "identity", position = "dodge")
+                           })
+                p = p +
+                    scale_y_continuous(limits = agg_lim) +
+                    theme(legend.position = "bottom",
+                          legend.direction = "horizontal",
+                          legend.justification = "center") +
+                    scale_color_manual(values = side_plot_colors)
+            })
+        }else{
+            agg_plots = lapply(seq_len(nclust), function(i){
+                side_plot_FUN(clust, i, fill_, replicate_, treatment_, cluster_, side_plot_colors)
+            })
+        }
+        return(agg_plots)
     }
     pagg_parts = gg_agg(clust, plot_type = side_plot_type)
     names(pagg_parts) = paste0("clust_agg_", seq_len(nclust))
@@ -485,8 +528,8 @@ ssvHeatmap2 = function(
 
     #STEP 6 - output assembly
 
-    clust_assignemnt = unique(clust[, .(get(row_), cluster_id)])
-    cluster_members = split(clust_assignemnt$V1, clust_assignemnt$cluster_id)
+    clust_assignemnt = unique(clust[, .(get(row_), get(cluster_))])
+    cluster_members = split(clust_assignemnt$V1, clust_assignemnt$V2)
     cluster_members = lapply(cluster_members, as.character)
     new("ssvH2",
         final_plot = list(pg_final),

@@ -59,6 +59,8 @@ resChIP = ssvHeatmap2(dt, fill_ = "FE", main_title = "ChIP-seq demo")
 plot(resChIP)
 ```
 
+RNA-seq
+
 ```{r}
 dt_rna = melt(ssvRecipes::dt_rna, id.vars = "Id")
 #Fix SF style colnames
@@ -75,6 +77,7 @@ resRna = ssvHeatmap2(dt_rna, main_title = "RNA-seq demo", treatment_space_size =
                      heatmap_colors = c("slategray", safeBrew(5, "reds")[4:5]))
 plot(resRna)
 ```
+
 
 20 random genes from cluster 1
 
@@ -110,6 +113,20 @@ sample group.
 ```{r}
 res = ssvHeatmap2(mat)
 res
+```
+
+Reusing cluster results.
+
+This avoids potentially slow and unnecessary clustering if you're tweaking
+graphical paramters.
+
+You could have also set the "cluster_id" variable manually or used 
+ssvSignalClustering() to set it before calling ssvHeatmap2() at all.
+
+```{r}
+clust = h.cluster_data(resChIP)
+resChIP_replot = ssvHeatmap2(clust[sample == "MCF10A"], fill_ = "FE")
+plot(resChIP_replot)
 ```
 
 *Thanks for the help! TLDR.*
