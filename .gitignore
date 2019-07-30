@@ -17,3 +17,5 @@ submit_salmon_*
 vignettes/STAR*
 vignettes/submit*
 test.Rds
+*.pdf
+*.csv

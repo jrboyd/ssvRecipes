@@ -161,6 +161,7 @@ h.plot_parts_individual = function(ssvH2){
 #' default NULL causes order of supplied data to be used.
 #' @param treatment_space_size numeric >=0. size of white space separating heatmap
 #' groups. Default is 0.1
+#' @param treatment_label_size numeric > 0. size of text to label groups with, default is 8.
 #' @param main_heights numeric of length 4.  controls size of heatmap
 #' body, axis ticks, group labels, and scale portion.
 #' @param main_widths numeric of length 5.  controls size of heatmap
@@ -190,7 +191,7 @@ h.plot_parts_individual = function(ssvH2){
 #' @return a ssvH2 object.  print() this object for help.
 #' @export
 #' @import seqsetvis
-#' @import data.table
+#' @rawNamespace import(data.table, except = c(shift, first, second, last))
 #' @import cowplot
 #' @examples
 #' res = ssvHeatmap2(heatmap_demo_matrix)
@@ -201,6 +202,7 @@ ssvHeatmap2 = function(
     treatment_ordering = NULL,
     replicate_ordering = NULL,
     treatment_space_size = .1,
+    treatment_label_size = 8,
     main_heights = c(8, 1, 2, 2),
     main_widths = c(2, .1, .2, .2, 1.8),
     cluster_ = "cluster_id",
@@ -213,7 +215,7 @@ ssvHeatmap2 = function(
     main_title = "Heatmap",
     side_plot_type = c("lines1", "lines2", "bars1", "bars2")[1],
     side_plot_FUN = NULL,
-    heatmap_colors = rev(safeBrew(5, pal = "spectral")),
+    heatmap_colors = rev(seqsetvis::safeBrew(5, pal = "spectral")),
     side_plot_colors = NULL
 ){
     if(length(unique(c(cluster_, treatment_, replicate_, column_, row_, fill_))) != 6){
@@ -380,10 +382,10 @@ ssvHeatmap2 = function(
         plot_grid(plotlist = plist, nrow = 1, rel_widths = w)
     }
 
-    plot_spaced_labels = function(plabels, spacer = .1){
+    plot_spaced_labels = function(plabels, spacer = .1, label_size = 8){
         plotlist = lapply(plabels, function(lab){
             ggplot() +
-                annotate("text", x = .5, y = 1, label = lab, vjust = 1.5, hjust = .5) +
+                annotate("text", x = .5, y = 1, label = lab, vjust = 1.5, hjust = .5, size = label_size) +
                 annotate("line", x = c(0,1), y = c(1,1)) +
                 theme_nothing()
         })
@@ -397,7 +399,7 @@ ssvHeatmap2 = function(
 
     pg_plots = plot_spaced_grid(plotlist = ppanels, treatment_space_size)
     pg_xaxis = plot_spaced_grid(plotlist = pxaxis, treatment_space_size)
-    pg_labels = plot_spaced_labels(plabels = treatment_ordering, treatment_space_size)
+    pg_labels = plot_spaced_labels(plabels = treatment_ordering, treatment_space_size, treatment_label_size)
 
     pg_main = plot_grid(pg_plots,
                         pg_xaxis,
@@ -437,7 +439,7 @@ ssvHeatmap2 = function(
 
     #aggregated line plots
     if(is.null(side_plot_colors)){
-        side_plot_colors = safeBrew(length(treatment_ordering))
+        side_plot_colors = seqsetvis::safeBrew(length(treatment_ordering))
     }
     stopifnot(length(side_plot_colors) == length(treatment_ordering))
     if(is.null(names(side_plot_colors))){
@@ -448,7 +450,7 @@ ssvHeatmap2 = function(
     gg_agg = function(clust, plot_type = c("lines1", "lines2", "bars1", "bars2")[1]){
         agg = clust[, .(agg_fill = mean(get(fill_))), by = c(treatment_, replicate_, cluster_)]
 
-        agg_lim = c(0, max(agg$agg_fill))
+        agg_lim = c(min(c(0, agg$agg_fill)), max(agg$agg_fill))
         if(is.null(side_plot_FUN)){
             agg_plots = lapply(seq_len(nclust), function(i){
                 p = switch(plot_type,

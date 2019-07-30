@@ -15,5 +15,5 @@ Imports:
     data.table,
     cowplot,
     seqsetvis
-RoxygenNote: 6.0.1
+RoxygenNote: 6.1.1
 biocViews: Software, ChIPSeq, Sequencing, Visualization

@@ -1,4 +1,4 @@
-#' Title
+#' myFetchStrandedBam
 #'
 #' @param bam_files
 #' @param qgr
@@ -7,26 +7,34 @@
 #' @param return_data.table
 #' @param flipStrand
 #'
-#' @return
+#' @return data.table with strand specific reads
 #' @export
-#' @import seqsetvis, GenomicRanges, data.table
-#'
+#' @import seqsetvis GenomicRanges
+#' @rawNamespace import(data.table, except = c(shift, first, second, last))
 #' @examples
-myFetchStrandedBam = function(bam_files, qgr, win_size = 5, fragLens = NA, return_data.table = TRUE, flipStrand = FALSE, max_dupes = Inf){
+myFetchStrandedBam = function(bam_files, qgr, win_size = 5,
+                              fragLens = NA, return_data.table = TRUE,
+                              flipStrand = FALSE,
+                              max_dupes = Inf, splice_strategy = c('none', "ignore", "add", "only")[1],
+                              anchor = "center"){
     pos_dt = ssvFetchBam(bam_files,
                          return_data.table = return_data.table,
                          qgr = qgr,
                          win_size = win_size,
                          target_strand = "+",
                          fragLens = fragLens,
-                         max_dupes = max_dupes)
+                         max_dupes = max_dupes,
+                         anchor = anchor,
+                         splice_strategy = splice_strategy)
     neg_dt = ssvFetchBam(bam_files,
                          return_data.table = return_data.table,
                          qgr = qgr,
                          win_size = win_size,
                          target_strand = "-",
                          fragLens = fragLens,
-                         max_dupes = max_dupes)
+                         max_dupes = max_dupes,
+                         anchor = anchor,
+                         splice_strategy = splice_strategy)
     if(flipStrand){
         pos_dt$strand = "-"
         neg_dt$strand = "+"
@@ -38,23 +46,47 @@ myFetchStrandedBam = function(bam_files, qgr, win_size = 5, fragLens = NA, retur
     rbind(pos_dt, neg_dt)
 }
 
-myStrandDiff = function(stranded_dt, cap = 30){
+#' subtracts minus from plus strand
+#'
+#' @param stranded_dt
+#' @param cap
+#'
+#' @return data table with strand difference calculation
+#' @export
+#'
+#' @examples
+myStrandDiff = function(stranded_dt){
     stranded_dtw = dcast(stranded_dt, id + x + sample ~ strand, value.var = "y")
     stranded_dtw[, diff := `+` - `-`]
 
-    hist(stranded_dtw$diff, breaks = 500, xlim = c(-cap, cap))
-    stranded_dtw[, cap_diff := diff]
+    # hist(stranded_dtw$diff, breaks = 500, xlim = c(-cap, cap))
 
-    stranded_dtw[cap_diff > cap, cap_diff := cap]
-    stranded_dtw[cap_diff < -cap, cap_diff := -cap]
-    hist(stranded_dtw$cap_diff, breaks = cap, xlim = c(-cap, cap))
+    # hist(stranded_dtw$cap_diff, breaks = cap, xlim = c(-cap, cap))
     stranded_dtw
 }
 
 
 
-myPlotDiffClusters = function(diff_dt, clust_dt, fcap = 5){
+#' different plots for showing strand differences
+#'
+#' @param diff_dt
+#' @param clust_dt
+#' @param fcap
+#'
+#' @return list of ggplots
+#' @export
+#'
+#' @examples
+myPlotDiffClusters = function(diff_dt, clust_dt, cap = 30, fcap = 5){
+    diff_dt[, cap_diff := diff]
+
+    diff_dt[cap_diff > cap, cap_diff := cap]
+    diff_dt[cap_diff < -cap, cap_diff := -cap]
+
+
     all_blocked_dc = merge(diff_dt, clust_dt, by = "id")
+
+
 
     all_blocked_dc[, cap_fill := cap_diff]
     all_blocked_dc[cap_fill > fcap, cap_fill := fcap]

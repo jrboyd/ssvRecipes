@@ -19,7 +19,7 @@ library(cowplot)
 ```
 
 ```{r files}
-fastq_paths = dir("~/R/JR_FLC_RNAseq_cross_promoter_capture/data_JR_RNAseq/fastqs/", full.names = TRUE)
+fastq_paths = dir("~/R/RNAseq_AT1_sorted/fastqs", full.names = TRUE)
 ```
 
 ## Count Based
@@ -27,7 +27,8 @@ fastq_paths = dir("~/R/JR_FLC_RNAseq_cross_promoter_capture/data_JR_RNAseq/fastq
 ### Align 
 
 ```{r alignment, message=FALSE}
-align_out = star_align_fastq_SE(fastq_paths, out_path = "~/R/JR_FLC_RNAseq_cross_promoter_capture/data_JR_RNAseq/alignments/")
+out_dir = "~/R/RNAseq_AT1_sorted/alignment/"
+align_out = star_align_fastq_SE(fastq_paths, out_path = out_dir)
 hold_jids = align_out$job_ids
 wait_jids(hold_jids)
 ```
@@ -35,9 +36,7 @@ wait_jids(hold_jids)
 ### Read Counting
 
 ```{r count, message=FALSE}
-bams = sapply(align_out$result_paths, function(root){
-    dir(dirname(root), pattern = paste0(basename(root), ".+\\.bam$"), full.names = TRUE)
-})
+bams = dir(out_dir, pattern = ".bam$", full.names = TRUE)
 se = counts_from_bams(bams, counts_tag = "vignette_counts")
 se
 ```

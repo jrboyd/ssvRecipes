@@ -144,6 +144,21 @@ wait_jids = function(hold_jids, interval = 5){
 #' Title
 #'
 #' @param hold_jids
+#'
+#' @return
+#' @export
+#'
+#' @examples
+kill_jids = function(hold_jids){
+    for(jid in hold_jids){
+        system(paste("qdel", jid))
+    }
+
+}
+
+#' Title
+#'
+#' @param hold_jids
 #' @param interval
 #' @param watch_prefix
 #'

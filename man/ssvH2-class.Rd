@@ -6,11 +6,9 @@
 \alias{ssvH2}
 \title{ssvH2}
 \usage{
-\S4method{initialize}{ssvH2}(.Object, final_plot, cluster_members, cluster_data,
-  plot_parts_grouped, plot_parts_individual)
+\S4method{initialize}{ssvH2}(.Object, final_plot, cluster_members,
+  cluster_data, plot_parts_grouped, plot_parts_individual)
 }
 \description{
 Stores results from ssvHeatmap2
-
-Constructor method of ssvH2 Class.
 }

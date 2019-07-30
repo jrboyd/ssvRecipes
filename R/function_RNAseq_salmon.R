@@ -215,6 +215,85 @@ salmon_quant_fastq_SE = function(index_path,
     return(list(quant_results = out_dirs, job_ids = all_hjid))
 }
 
+#' salmon_quant_fastq_PE
+#'
+#' runs salmon quant using specified transcriptome index on every fastq supplied
+#' for paired-end reads only
+#'
+#' @param index_path path to index file
+#' @param r1_fastq_paths paths to fastq files (ungzipped?)
+#' @param out_dirs directories to put results in per fastq
+#'
+#' @return list with paths to output directories and job ids
+#' @export
+#'
+#' @examples
+#' #nonsense without some toy data
+#' \dontrun{
+#' salmon_quant_fastq_SE(index_path, r1_fastq_paths)
+#' }
+#'
+salmon_quant_fastq_PE = function(index_path,
+                                 r1_fastq_paths,
+                                 r2_fastq_paths = NULL,
+                                 r1_to_r2_FUN = function(r1){sub("P1.fastq", "P2.fastq", r1)},
+                                 p = 8,
+                                 out_path = getwd(),
+                                 out_dirs = paste0("quant_", sub("_P1.fastq", "", basename(r1_fastq_paths))),
+                                 do_submit = TRUE
+){
+    if(is.list(index_path)) index_path = index_path[[1]]
+    stopifnot(length(out_path) == 1)
+    dir.create(out_path, showWarnings = FALSE)
+    out_dirs = paste0(out_path, "/", out_dirs)
+    stopifnot(file.exists(index_path))
+    stopifnot(all(file.exists(r1_fastq_paths)))
+
+    if(is.null(r2_fastq_paths)){
+        r2_fastq_paths = r1_to_r2_FUN(r1_fastq_paths)
+    }
+    stopifnot(all(file.exists(r2_fastq_paths)))
+    stopifnot(length(r2_fastq_paths) == length(out_dirs))
+
+    stopifnot(length(r1_fastq_paths) == length(out_dirs))
+    stopifnot(!any(duplicated(out_dirs)))
+    cmd_quant = "salmon quant -i INDEX_VAR -l A -1 FASTQ_VAR1 -2 FASTQ_VAR2 -p THREADS_VAR -o OUT_VAR --gcBias --seqBias"
+    all_hjid = character()
+    for(i in seq_along(r1_fastq_paths)){
+        cmd_this = cmd_quant
+        cmd_this = sub("INDEX_VAR", index_path, cmd_this)
+        cmd_this = sub("FASTQ_VAR1", r1_fastq_paths[i], cmd_this)
+        cmd_this = sub("FASTQ_VAR2", r2_fastq_paths[i], cmd_this)
+        cmd_this = sub("THREADS_VAR", p, cmd_this)
+        cmd_this = sub("OUT_VAR", out_dirs[i], cmd_this)
+
+        bash_lines = c("#!/bin/bash",
+                       paste0("#$ -N salmon_quant_", i),
+                       "#$ -cwd",
+                       paste("#$ -e", out_dirs[i]),
+                       paste("#$ -o", out_dirs[i]),
+                       paste("#$ -pe threads", p),
+                       cmd_this)
+        submit_file = paste0("submit_salmon_quant_", i, ".sh")
+        writeLines(bash_lines, submit_file)
+        if(dir.exists(out_dirs[i])){
+            warning(out_dirs[i], " output already exists, delete or submit manually")
+            all_hjid = c(all_hjid, NULL)
+        }else{
+            if(do_submit){
+                sub_out = system(paste("qsub", submit_file), intern = TRUE)
+                hjid = strsplit(sub_out, " ")[[1]]
+                hjid = hjid[which(grepl("job", hjid))[1]+1]
+            }else{
+                hjid = NULL
+            }
+            all_hjid = c(all_hjid, hjid)
+        }
+
+    }
+    return(list(quant_results = out_dirs, job_ids = all_hjid))
+}
+
 #' Title
 #'
 #' @param sf_files
