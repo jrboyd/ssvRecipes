@@ -19,3 +19,4 @@ vignettes/submit*
 test.Rds
 *.pdf
 *.csv
+pcaOut.PC1.chr21.txt
