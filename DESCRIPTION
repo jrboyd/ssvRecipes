@@ -12,8 +12,17 @@ LazyData: true
 Depends: 
     ggplot2
 Imports:
-    data.table,
+    BiocFileCache,
+    BiocParallel,
+    biovizBase,
     cowplot,
+    data.table,
+    GenomeInfoDb,
+    GenomicAlignments,
+    GenomicFeatures,
+    GenomicRanges,
+    magrittr,
+    Rsamtools,
     seqsetvis
 RoxygenNote: 6.1.1
 biocViews: Software, ChIPSeq, Sequencing, Visualization
