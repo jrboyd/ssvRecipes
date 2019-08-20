@@ -23,6 +23,7 @@ Imports:
     GenomicFeatures,
     GenomicRanges,
     magrittr,
+    org.Hs.eg.db,
     Rsamtools,
     seqsetvis
 RoxygenNote: 6.1.1
