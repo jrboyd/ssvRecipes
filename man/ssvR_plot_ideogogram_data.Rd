@@ -19,8 +19,9 @@ ssvR_plot_ideogogram_data
 }
 \examples{
 library(data.table)
-dat = fread("~/homer_hic/MCF10A_pooled_PE_tag_dir/pcaOut.PC1.txt")
+f = system.file("extdata/pcaOut.PC1.chr2x.txt", package = "ssvRecipes")
+dat = fread(f)
 dat = dat[, .(x = (start+end)/2, y = PC1, seqnames = chr)]
-ssvR_plot_ideogogram_data(dat, facet_cols = 2)
-ssvR_plot_ideogogram_data(dat, facet_cols = 4, data_ymax = 10)
+ssvR_plot_ideogogram_data(dat, facet_cols = 2, chr_to_show = c("chr20", "chr21", "chr22"))
+ssvR_plot_ideogogram_data(dat, facet_cols = 1, data_ymax = 10, chr_to_show = c("chr20", "chr21", "chr22"))
 }

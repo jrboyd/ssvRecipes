@@ -15,6 +15,7 @@ Imports:
     BiocFileCache,
     BiocParallel,
     biovizBase,
+    clusterProfiler,
     cowplot,
     data.table,
     GenomeInfoDb,

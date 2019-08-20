@@ -43,6 +43,7 @@ symbol2uniprot = function(x){
 #'
 #' @return
 #' @export
+#' @import clusterProfiler
 #'
 #' @examples
 my_clusterProfiler_kegg_fromGenes = function(gene_lists, bg_genes = NULL, force_overwrite = FALSE){
@@ -62,7 +63,7 @@ my_clusterProfiler_kegg_fromGenes = function(gene_lists, bg_genes = NULL, force_
                             ck = bfcif(bfc, rname_go_dat, force_overwrite = force_overwrite,
                                        function(){
                                            message("calc compareCluster")
-                                           compareCluster(geneCluster = gene_lists,
+                                           clusterProfiler::compareCluster(geneCluster = gene_lists,
                                                           universe      = bg_genes,
                                                           fun = "enrichKEGG",
                                                           # OrgDb = org.Hs.eg.db,
@@ -94,7 +95,8 @@ my_clusterProfiler_kegg_fromGenes = function(gene_lists, bg_genes = NULL, force_
 #'
 #' @return
 #' @export
-#'
+#' @import clusterProfiler
+#' 
 #' @examples
 my_clusterProfiler_kegg = function(qgr, clust_assign, bg_genes = NULL){
     peak_dt = as.data.table(qgr)
@@ -132,7 +134,7 @@ my_clusterProfiler_kegg = function(qgr, clust_assign, bg_genes = NULL){
                             ck = bfcif(bfc, rname_go_dat,
                                        force_overwrite = TRUE, function(){
                                            message("calc compareCluster")
-                                           compareCluster(geneCluster = gene_lists,
+                                           clusterProfiler::compareCluster(geneCluster = gene_lists,
                                                           universe      = symbol2uniprot(bg_genes),
                                                           fun = "enrichKEGG",
                                                           # OrgDb = org.Hs.eg.db,
@@ -167,7 +169,8 @@ library(org.Hs.eg.db)
 #'
 #' @return
 #' @export
-#'
+#' @import clusterProfiler
+#' 
 #' @examples
 my_clusterProfiler_fromGenes = function(gene_lists, bg_genes = NULL, force_overwrite = FALSE){
     if(is.null(bg_genes)){
@@ -181,7 +184,7 @@ my_clusterProfiler_fromGenes = function(gene_lists, bg_genes = NULL, force_overw
             expr = {
                 ck = bfcif(bfc, rname_go_dat, force_overwrite = force_overwrite, function(){
                     message("calc compareCluster")
-                    compareCluster(geneCluster = gene_lists,
+                    clusterProfiler::compareCluster(geneCluster = gene_lists,
                                    universe      = bg_genes,
                                    fun = "enrichGO",
                                    OrgDb = org.Hs.eg.db,

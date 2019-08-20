@@ -5,7 +5,7 @@
 \title{seqsetvis improved Heatmap}
 \usage{
 ssvHeatmap2(mat, treatment_ordering = NULL, replicate_ordering = NULL,
-  treatment_space_size = 0.1, treatment_label_size = 1,
+  treatment_space_size = 0.1, treatment_label_size = 8,
   main_heights = c(8, 1, 2, 2), main_widths = c(2, 0.1, 0.2, 0.2, 1.8),
   cluster_ = "cluster_id", treatment_ = "sample", replicate_ = "x",
   column_ = "column", row_ = "id", fill_ = "y", nclust = 5,
@@ -25,6 +25,8 @@ default NULL causes order of supplied data to be used.}
 
 \item{treatment_space_size}{numeric >=0. size of white space separating heatmap
 groups. Default is 0.1}
+
+\item{treatment_label_size}{numeric > 0. size of text to label groups with, default is 8.}
 
 \item{main_heights}{numeric of length 4.  controls size of heatmap
 body, axis ticks, group labels, and scale portion.}
