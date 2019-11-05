@@ -164,7 +164,7 @@ track_rna = function(bams, qgr, flip_x = FALSE, flip_strand = FALSE, max_dupes =
 #'
 #' @examples
 track_ref = function(ref = "~/gencode.v28.annotation.gtf.gz", qgr, flip_x = FALSE,
-                     exon_height = .5, debug = FALSE){
+                     exon_height = .5, intron_thickness = 2, debug = FALSE){
     if(debug) browser()
     if(!class(ref) == "GRanges"){
         if(file.exists(ref)){
@@ -190,8 +190,8 @@ track_ref = function(ref = "~/gencode.v28.annotation.gtf.gz", qgr, flip_x = FALS
     ref_dt_base = melt(ref_dt_base, id.vars = c("strand", "gene_name", "y"), value.name = "x")
 
     p_ref = ggplot() +
-        geom_line(data = ref_dt_base, aes_string(x = "x", y = "y", color = "strand", group = "gene_name"), size = 2) +
-        geom_rect(data = ref_dt, aes(fill = strand, xmin = start, xmax = end, ymin = ymin, ymax = ymax)) +
+        geom_line(data = ref_dt_base, aes_string(x = "x", y = "y", color = "strand", group = "gene_name"), size = intron_thickness) +
+        geom_rect(data = ref_dt, aes(fill = strand, color = strand, xmin = start, xmax = end, ymin = ymin, ymax = ymax)) +
         scale_y_continuous(breaks = seq_along(levels(ref_dt[[yvar]])),
                            labels = function(x)levels(ref_dt[[yvar]])[round(x)]) +
         # scale_x_reverse(labels = function(x)x/10^3, limits = rev(rng)) +
@@ -420,6 +420,7 @@ track_assembly = function(p_list, qgr, rel_heights = rep(1, length(p_list))){
 #'
 #' @return
 #' @export
+#' @import grid
 #'
 #' @examples
 sync_width = function(my_plots){
@@ -435,7 +436,7 @@ sync_width = function(my_plots){
     maxWidth = my_widths[[1]]
     if(length(my_widths) > 1){
         for(i in 2:length(my_widths)){
-            maxWidth = unit.pmax(maxWidth, my_widths[[i]])
+            maxWidth = grid::unit.pmax(maxWidth, my_widths[[i]])
         }
     }
     for(j in 1:length(my_grobs)){
