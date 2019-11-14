@@ -26,12 +26,12 @@ my_annotate = function(gr,
 #'
 #' @return
 #' @export
-#' @import org.Hs.eg.db
+#'
 #' @examples
 symbol2uniprot = function(x){
     bres = bitr(x, fromType = "SYMBOL",
                 toType = c("UNIPROT"),
-                OrgDb = org.Hs.eg.db::org.Hs.eg.db)
+                OrgDb = org.Hs.eg.db)
     bres[!duplicated(bres$SYMBOL),]$UNIPROT
 }
 
@@ -43,7 +43,6 @@ symbol2uniprot = function(x){
 #'
 #' @return
 #' @export
-#' @import clusterProfiler
 #'
 #' @examples
 my_clusterProfiler_kegg_fromGenes = function(gene_lists, bg_genes = NULL, force_overwrite = FALSE){
@@ -63,7 +62,7 @@ my_clusterProfiler_kegg_fromGenes = function(gene_lists, bg_genes = NULL, force_
                             ck = bfcif(bfc, rname_go_dat, force_overwrite = force_overwrite,
                                        function(){
                                            message("calc compareCluster")
-                                           clusterProfiler::compareCluster(geneCluster = gene_lists,
+                                           compareCluster(geneCluster = gene_lists,
                                                           universe      = bg_genes,
                                                           fun = "enrichKEGG",
                                                           # OrgDb = org.Hs.eg.db,
@@ -95,8 +94,7 @@ my_clusterProfiler_kegg_fromGenes = function(gene_lists, bg_genes = NULL, force_
 #'
 #' @return
 #' @export
-#' @import clusterProfiler
-#' 
+#'
 #' @examples
 my_clusterProfiler_kegg = function(qgr, clust_assign, bg_genes = NULL){
     peak_dt = as.data.table(qgr)
@@ -158,8 +156,8 @@ my_clusterProfiler_kegg = function(qgr, clust_assign, bg_genes = NULL){
     res
 }
 
-# library(clusterProfiler)
-# library(org.Hs.eg.db)
+library(clusterProfiler)
+library(org.Hs.eg.db)
 
 #' Title
 #'
@@ -169,7 +167,7 @@ my_clusterProfiler_kegg = function(qgr, clust_assign, bg_genes = NULL){
 #'
 #' @return
 #' @export
-#' @import clusterProfiler org.Hs.eg.db
+#'
 #' @examples
 my_clusterProfiler_fromGenes = function(gene_lists, bg_genes = NULL, force_overwrite = FALSE){
     if(is.null(bg_genes)){
@@ -183,10 +181,10 @@ my_clusterProfiler_fromGenes = function(gene_lists, bg_genes = NULL, force_overw
             expr = {
                 ck = bfcif(bfc, rname_go_dat, force_overwrite = force_overwrite, function(){
                     message("calc compareCluster")
-                    clusterProfiler::compareCluster(geneCluster = gene_lists,
+                    compareCluster(geneCluster = gene_lists,
                                    universe      = bg_genes,
                                    fun = "enrichGO",
-                                   OrgDb = org.Hs.eg.db::org.Hs.eg.db,
+                                   OrgDb = org.Hs.eg.db,
                                    keyType       = 'SYMBOL',
                                    ont           = "BP",
                                    pAdjustMethod = "BH",
@@ -295,7 +293,7 @@ cluster_table = function(cp_res, clust_id = NULL){
     if(cp_res@fun == "enrichGO"){
 
     }else if(cp_res@fun == "enrichKEGG"){
-        colnames(dmat) = bitr(colnames(dmat), fromType = "UNIPROT", toType = "SYMBOL", OrgDb = org.Hs.eg.db::org.Hs.eg.db)$SYMBOL
+        colnames(dmat) = bitr(colnames(dmat), fromType = "UNIPROT", toType = "SYMBOL", OrgDb = org.Hs.eg.db)$SYMBOL
     }
 
     dmat = t(dmat)

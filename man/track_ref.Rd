@@ -5,7 +5,7 @@
 \title{Title}
 \usage{
 track_ref(ref = "~/gencode.v28.annotation.gtf.gz", qgr, flip_x = FALSE,
-  exon_height = 0.5, debug = FALSE)
+  exon_height = 0.5, intron_thickness = 2, debug = FALSE)
 }
 \arguments{
 \item{debug}{}

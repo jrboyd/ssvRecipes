@@ -409,41 +409,41 @@ track_ref = function(ref = "~/gencode.v28.annotation.gtf.gz", qgr, flip_x = FALS
 #' @examples
 track_assembly = function(p_list, qgr, rel_heights = rep(1, length(p_list))){
     p_list[[length(p_list)]] = p_list[[length(p_list)]] + labs(x = paste(as.character(seqnames(qgr)), "kbp"))
-    p_list = dthic::sync_width(p_list)
+    p_list = sync_width(p_list)
     pg = cowplot::plot_grid(plotlist = p_list, ncol = 1,
                             rel_heights = rel_heights, scale = 1)
 }
-
-#' Title
-#'
-#' @param my_plots
-#'
-#' @return
-#' @export
-#' @import grid
-#'
-#' @examples
-sync_width = function(my_plots){
-    stopifnot(class(my_plots) == "list")
-    stopifnot(all(sapply(my_plots, function(x)"ggplot" %in% class(x))))
-    my_grobs = lapply(my_plots, function(x){
-        ggplotGrob(x)
-    })
-
-    my_widths = lapply(my_grobs, function(gt){
-        gt$widths
-    })
-    maxWidth = my_widths[[1]]
-    if(length(my_widths) > 1){
-        for(i in 2:length(my_widths)){
-            maxWidth = grid::unit.pmax(maxWidth, my_widths[[i]])
-        }
-    }
-    for(j in 1:length(my_grobs)){
-        my_grobs[[j]]$widths = maxWidth
-    }
-    my_grobs
-}
+#' 
+#' #' Title
+#' #'
+#' #' @param my_plots
+#' #'
+#' #' @return
+#' #' @export
+#' #' @import grid
+#' #'
+#' #' @examples
+#' sync_width = function(my_plots){
+#'     stopifnot(class(my_plots) == "list")
+#'     stopifnot(all(sapply(my_plots, function(x)"ggplot" %in% class(x))))
+#'     my_grobs = lapply(my_plots, function(x){
+#'         ggplotGrob(x)
+#'     })
+#' 
+#'     my_widths = lapply(my_grobs, function(gt){
+#'         gt$widths
+#'     })
+#'     maxWidth = my_widths[[1]]
+#'     if(length(my_widths) > 1){
+#'         for(i in 2:length(my_widths)){
+#'             maxWidth = grid::unit.pmax(maxWidth, my_widths[[i]])
+#'         }
+#'     }
+#'     for(j in 1:length(my_grobs)){
+#'         my_grobs[[j]]$widths = maxWidth
+#'     }
+#'     my_grobs
+#' }
 
 # library(GenomicRanges)
 # library(data.table)

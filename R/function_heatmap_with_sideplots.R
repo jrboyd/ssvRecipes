@@ -379,7 +379,7 @@ ssvHeatmap2 = function(
         plist = plist[o]
         w = c(spacer, rel_widths)[o]
         # w = c(rel_widths[1], unlist(lapply(seq_len(length(plotlist) -1), function(i)(c(spacer, rel_widths)))))
-        plot_grid(plotlist = plist, nrow = 1, rel_widths = w)
+        cowplot::plot_grid(plotlist = plist, nrow = 1, rel_widths = w)
     }
 
     plot_spaced_labels = function(plabels, spacer = .1, label_size = 8){
@@ -394,14 +394,14 @@ ssvHeatmap2 = function(
         o = c(2, unlist(lapply(seq_len(length(plotlist) -1), function(i)(c(1, i+2)))))
         plist = plist[o]
         w = c(spacer, rel_widths)[o]
-        plot_grid(plotlist = plist, nrow = 1, rel_widths = w)
+        cowplot::plot_grid(plotlist = plist, nrow = 1, rel_widths = w)
     }
 
     pg_plots = plot_spaced_grid(plotlist = ppanels, treatment_space_size)
     pg_xaxis = plot_spaced_grid(plotlist = pxaxis, treatment_space_size)
     pg_labels = plot_spaced_labels(plabels = treatment_ordering, treatment_space_size, treatment_label_size)
 
-    pg_main = plot_grid(pg_plots,
+    pg_main = cowplot::plot_grid(pg_plots,
                         pg_xaxis,
                         pg_labels,
                         plegend,
@@ -414,7 +414,7 @@ ssvHeatmap2 = function(
     pclust = seqsetvis:::add_cluster_annotation(clust[[cluster_]]) +
         coord_cartesian(expand = FALSE) + theme_nothing()
 
-    pg_clust = plot_grid(pclust,
+    pg_clust = cowplot::plot_grid(pclust,
                          pblank,
                          pblank,
                          pblank,
