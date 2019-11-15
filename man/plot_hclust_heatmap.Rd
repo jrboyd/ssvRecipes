@@ -4,11 +4,23 @@
 \alias{plot_hclust_heatmap}
 \title{Title}
 \usage{
-plot_hclust_heatmap(x)
+plot_hclust_heatmap(x, Rowv = TRUE, Colv = TRUE,
+  dendrogram = c("both", "row", "column", "none")[1])
 }
 \arguments{
 \item{x}{}
 }
 \description{
 Title
+}
+\examples{
+library(ssvRecipes)
+mat = matrix(runif(100), ncol = 10)
+plot_hclust_heatmap(mat)
+plot_hclust_heatmap(mat, Rowv = FALSE)
+plot_hclust_heatmap(mat, Colv = FALSE)
+plot_hclust_heatmap(mat, dendrogram = "none")
+plot_hclust_heatmap(mat, dendrogram = "row")
+plot_hclust_heatmap(mat, dendrogram = "column")
+
 }
