@@ -33,7 +33,10 @@
 #' }
 ssvFetchBamPE.RNA = function(file_paths, qgr, win_size = 50, target_strand = "both", splice_strategy = "ignore",
                          return_data.table = FALSE, win_method = "sample", 
-                         flip_strand = FALSE, sum_reads = TRUE, force_skip_centerFix = TRUE){
+                         max_dupes = Inf,
+                         flip_strand = FALSE, sum_reads = TRUE, 
+                         n_cores = getOption("mc.cores", 1),
+                         force_skip_centerFix = TRUE){
     y = cn = NULL #reserve bindings
     strand(qgr) = "*"
     bam_r1 = seqsetvis::ssvFetchBam(
@@ -47,6 +50,8 @@ ssvFetchBamPE.RNA = function(file_paths, qgr, win_size = 50, target_strand = "bo
         flag = scanBamFlag(isFirstMateRead = TRUE),
         win_method = win_method,
         flip_strand = flip_strand, 
+        max_dupes = max_dupes,
+        n_cores = n_cores,
         force_skip_centerFix = force_skip_centerFix
     )
     cn = colnames(bam_r1)
@@ -64,6 +69,8 @@ ssvFetchBamPE.RNA = function(file_paths, qgr, win_size = 50, target_strand = "bo
             flag = scanBamFlag(isSecondMateRead = TRUE),
             win_method = win_method,
             flip_strand = !flip_strand,
+            max_dupes = max_dupes,
+            n_cores = n_cores,
             force_skip_centerFix = force_skip_centerFix
         )
     bam_r2$read = "r2"

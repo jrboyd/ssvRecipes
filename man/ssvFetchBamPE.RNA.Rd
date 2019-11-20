@@ -7,7 +7,7 @@
 ssvFetchBamPE.RNA(file_paths, qgr, win_size = 50,
   target_strand = "both", splice_strategy = "ignore",
   return_data.table = FALSE, win_method = "sample",
-  flip_strand = FALSE, sum_reads = TRUE)
+  flip_strand = FALSE, sum_reads = TRUE, force_skip_centerFix = TRUE)
 }
 \arguments{
 \item{file_paths}{character vector of file_paths to load from. Alternatively,

@@ -25,6 +25,6 @@ Imports:
     magrittr,
     org.Hs.eg.db,
     Rsamtools,
-    seqsetvis
+    seqsetvis (>= 1.5.3)
 RoxygenNote: 6.1.1
 biocViews: Software, ChIPSeq, Sequencing, Visualization
