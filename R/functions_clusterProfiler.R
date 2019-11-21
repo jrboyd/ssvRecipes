@@ -31,7 +31,7 @@ my_annotate = function(gr,
 symbol2uniprot = function(x){
     bres = bitr(x, fromType = "SYMBOL",
                 toType = c("UNIPROT"),
-                OrgDb = org.Hs.eg.db)
+                OrgDb = org.Hs.eg.db::org.Hs.eg.db)
     bres[!duplicated(bres$SYMBOL),]$UNIPROT
 }
 
@@ -94,6 +94,7 @@ my_clusterProfiler_kegg_fromGenes = function(gene_lists, bg_genes = NULL, force_
 #'
 #' @return
 #' @export
+#' @import clusterProfiler 
 #'
 #' @examples
 my_clusterProfiler_kegg = function(qgr, clust_assign, bg_genes = NULL){
@@ -167,6 +168,7 @@ library(org.Hs.eg.db)
 #'
 #' @return
 #' @export
+#' @import org.Hs.eg.db, clusterProfiler
 #'
 #' @examples
 my_clusterProfiler_fromGenes = function(gene_lists, bg_genes = NULL, force_overwrite = FALSE){
@@ -184,7 +186,7 @@ my_clusterProfiler_fromGenes = function(gene_lists, bg_genes = NULL, force_overw
                     compareCluster(geneCluster = gene_lists,
                                    universe      = bg_genes,
                                    fun = "enrichGO",
-                                   OrgDb = org.Hs.eg.db,
+                                   OrgDb = org.Hs.eg.db::org.Hs.eg.db,
                                    keyType       = 'SYMBOL',
                                    ont           = "BP",
                                    pAdjustMethod = "BH",
@@ -293,7 +295,10 @@ cluster_table = function(cp_res, clust_id = NULL){
     if(cp_res@fun == "enrichGO"){
 
     }else if(cp_res@fun == "enrichKEGG"){
-        colnames(dmat) = bitr(colnames(dmat), fromType = "UNIPROT", toType = "SYMBOL", OrgDb = org.Hs.eg.db)$SYMBOL
+        colnames(dmat) = bitr(colnames(dmat), 
+                              fromType = "UNIPROT", 
+                              toType = "SYMBOL", 
+                              OrgDb = org.Hs.eg.db::org.Hs.eg.db)$SYMBOL
     }
 
     dmat = t(dmat)

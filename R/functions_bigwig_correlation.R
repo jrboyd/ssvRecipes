@@ -69,12 +69,23 @@ windowize_peaks = function(rolaps, win_size = 500){
 
 
 
+#' Title
+#'
+#' @param mat 
+#' @param fill 
+#' @param title 
+#' @param subtitle 
+#'
+#' @return
+#' @export
+#' @import ggdendro
+#' @examples
 ggheatmap.dendro = function(mat, fill = "", title = "", subtitle = ""){
     x <- mat
     dd.col <- as.dendrogram(hclust(dist(x)))
     dd.row <- as.dendrogram(hclust(dist(t(x))))
-    dx <- dendro_data(dd.row)
-    dy <- dendro_data(dd.col)
+    dx <- ggdendro::dendro_data(dd.row)
+    dy <- ggdendro::dendro_data(dd.col)
     
     ggdend <- function(df) {
         ggplot() +
