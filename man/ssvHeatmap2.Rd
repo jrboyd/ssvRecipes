@@ -8,11 +8,12 @@ ssvHeatmap2(mat, treatment_ordering = NULL, replicate_ordering = NULL,
   treatment_space_size = 0.1, treatment_label_size = 8,
   main_heights = c(8, 1, 2, 2), main_widths = c(2, 0.1, 0.2, 0.2, 1.8),
   cluster_ = "cluster_id", treatment_ = "sample", replicate_ = "x",
-  column_ = "column", row_ = "id", fill_ = "y", nclust = 5,
-  main_title = "Heatmap", side_plot_type = c("lines1", "lines2",
-  "bars1", "bars2")[1], side_plot_FUN = NULL,
-  heatmap_colors = rev(seqsetvis::safeBrew(5, pal = "spectral")),
-  side_plot_colors = NULL)
+  column_ = "column", row_ = "id", fill_ = "y", fill_label = fill_,
+  nclust = 5, main_title = "Heatmap", main_title.x = 0.02,
+  main_title.y = 0.98, main_title.hjust = 0, main_title.vjust = 1,
+  side_plot_type = c("lines1", "lines2", "bars1", "bars2")[1],
+  side_plot_FUN = NULL, heatmap_colors = rev(seqsetvis::safeBrew(5, pal
+  = "spectral")), symm_colors = TRUE, side_plot_colors = NULL)
 }
 \arguments{
 \item{mat}{numeric matrix with row and column names set.  see details.}

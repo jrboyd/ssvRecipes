@@ -211,11 +211,17 @@ ssvHeatmap2 = function(
     column_ = "column",
     row_ = "id",
     fill_ = "y",
+    fill_label = fill_,
     nclust = 5,
     main_title = "Heatmap",
+    main_title.x = .02,
+    main_title.y = .98,
+    main_title.hjust = 0,
+    main_title.vjust = 1,
     side_plot_type = c("lines1", "lines2", "bars1", "bars2")[1],
     side_plot_FUN = NULL,
     heatmap_colors = rev(seqsetvis::safeBrew(5, pal = "spectral")),
+    symm_colors = TRUE,
     side_plot_colors = NULL
 ){
     if(length(unique(c(cluster_, treatment_, replicate_, column_, row_, fill_))) != 6){
@@ -331,12 +337,16 @@ ssvHeatmap2 = function(
     }
 
     fill_lim = range(clust[[fill_]])
+    if(symm_colors){
+        fill_lim = max(abs(fill_lim)) *  c(-1, 1)
+    }
     p_groups = lapply(treatment_ordering, function(g){
         p = ggplot(clust[get(treatment_) == g]) +
             geom_raster(aes_string(x = replicate_, y = row_, fill = fill_)) +
             scale_fill_gradientn(colours = heatmap_colors, limits = fill_lim) +
             theme(legend.position = "bottom") +
-            coord_cartesian(expand = FALSE)
+            coord_cartesian(expand = FALSE) +
+            labs(fill = fill_label)
         p
     })
     names(p_groups) = paste0("heatmap_", treatment_ordering)
@@ -490,7 +500,9 @@ ssvHeatmap2 = function(
                     theme(legend.position = "bottom",
                           legend.direction = "horizontal",
                           legend.justification = "center") +
-                    scale_color_manual(values = side_plot_colors)
+                    scale_color_manual(values = side_plot_colors) +
+                    theme_nothing() + 
+                    theme(plot.background = element_rect(color = "black"))
             })
         }else{
             agg_plots = lapply(seq_len(nclust), function(i){
@@ -508,10 +520,12 @@ ssvHeatmap2 = function(
     # npanels = sum(grepl("panel", gt$layout$name))
 
     pp_agg_axis = get_ggpart(pagg_parts[[1]] + theme(axis.line = element_blank()), "axis-b")
-    pagg = lapply(pagg_parts, function(p){
-        p + theme_nothing() + theme(plot.background = element_rect(color = "black"))
+    pagg_parts.mod = lapply(pagg_parts, function(p){
+        p +  theme(axis.line = element_blank(), axis.ticks = element_blank(), 
+                   axis.text.x = element_blank(), axis.title = element_blank()) +
+            guides(color = "none", fill = "none", shape = "none", size = "none")
     })
-    pagg = plot_grid(plotlist = pagg, ncol = 1)
+    pagg = plot_grid(plotlist = pagg_parts.mod, ncol = 1)
     pg_agg = plot_grid(pagg,
                        plot_grid(plotlist = pp_agg_axis, nrow = 1),
                        pblank,
@@ -526,7 +540,8 @@ ssvHeatmap2 = function(
                        pg_agg,
                        rel_widths = main_widths, nrow = 1)
 
-    pg_final = plot_grid(pg_all, scale = .9, labels = main_title)
+    pg_final = plot_grid(pg_all, scale = .9) +
+        draw_text(main_title, x = main_title.x, y = main_title.y, hjust = main_title.hjust, vjust = main_title.vjust)
 
     #STEP 6 - output assembly
 
