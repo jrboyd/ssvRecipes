@@ -165,7 +165,7 @@ plot_scatter_side_density.xy = function( xy_data,
                                          #point labelling
                                          n_auto_label = 8,
                                          manual_label = NULL,
-                                         label_size = 2,
+                                         label_size = 6,
                                          label_color = 'black',
                                          label_GEOM = shadowtext::geom_shadowtext,
                                          #reference lines
@@ -318,7 +318,10 @@ plot_scatter_side_density.xy = function( xy_data,
     }
     
     #add labels
-    p_scatter = p_scatter + label_GEOM(data = xy_data[get(id_) %in% to_label], show.legend = FALSE, size = label_size)    
+    if(length(to_label) > 0){
+        p_scatter = p_scatter + label_GEOM(data = xy_data[get(id_) %in% to_label], show.legend = FALSE, size = label_size)        
+    }
+    
     
     
     components = list(scatter = p_scatter, x_density = p_x_density, y_density = p_y_density)
