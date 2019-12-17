@@ -65,14 +65,11 @@ my_clusterProfiler_kegg_fromGenes = function(gene_lists, bg_genes = NULL, force_
                                            compareCluster(geneCluster = gene_lists,
                                                           universe      = bg_genes,
                                                           fun = "enrichKEGG",
-                                                          # OrgDb = org.Hs.eg.db,
                                                           keyType       = 'uniprot',
-                                                          # ont           = "BP",
                                                           pAdjustMethod = "BH",
                                                           pvalueCutoff  = 0.05,
                                                           qvalueCutoff  = 0.1)
                                        })
-                            # ck = my_clusterProfiler(qgr, clust_assign)
                             p = ck %>% dotplot
                             list(ck, p)
                         }, error = {
@@ -157,9 +154,6 @@ my_clusterProfiler_kegg = function(qgr, clust_assign, bg_genes = NULL){
     res
 }
 
-library(clusterProfiler)
-library(org.Hs.eg.db)
-
 #' Title
 #'
 #' @param gene_lists
@@ -168,7 +162,7 @@ library(org.Hs.eg.db)
 #'
 #' @return
 #' @export
-#' @import org.Hs.eg.db, clusterProfiler
+#' @import org.Hs.eg.db clusterProfiler
 #'
 #' @examples
 my_clusterProfiler_fromGenes = function(gene_lists, bg_genes = NULL, force_overwrite = FALSE){
