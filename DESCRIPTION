@@ -10,6 +10,7 @@ License: MIT + file LICENSE
 Encoding: UTF-8
 LazyData: true
 Depends: 
+    data.table,
     ggplot2
 Imports:
     BiocFileCache,
@@ -17,7 +18,6 @@ Imports:
     biovizBase,
     clusterProfiler,
     cowplot,
-    data.table,
     GenomeInfoDb,
     GenomicAlignments,
     GenomicFeatures,
@@ -26,6 +26,7 @@ Imports:
     magrittr,
     org.Hs.eg.db,
     Rsamtools,
-    seqsetvis (>= 1.5.3)
+    seqsetvis (>= 1.5.3),
+    shadowtext
 RoxygenNote: 6.1.1
 biocViews: Software, ChIPSeq, Sequencing, Visualization
