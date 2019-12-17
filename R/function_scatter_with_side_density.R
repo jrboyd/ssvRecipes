@@ -139,6 +139,10 @@ library(ggplot2)
 #' comp$y_density = comp$y_density + coord_flip(xlim = new_lim)
 #' plot_scatter_side_density.assemble(comp, main_title = "new limits")
 #' 
+#' xy_df = as.data.frame(xy_data[,1:3])
+#' rownames(xy_df) = xy_data$id
+#' plot_scatter_side_density.xy(xy_df)
+#' 
 plot_scatter_side_density.xy = function( xy_data,
                                          x_ = "x",
                                          y_ = "y",
