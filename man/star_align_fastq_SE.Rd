@@ -7,7 +7,7 @@
 star_align_fastq_SE(fastq_paths, index_path = HG38_STAR_INDEX,
   gtf_path = HG38_v28_GTF_URL, star_path = STAR_PATH,
   cache_path = "~/.cache", n_cores = 8, hold_jids = NA,
-  out_path = file.path(getwd(), "alignment"), out_dirs = NULL,
+  out_path = file.path(getwd(), "alignment"), output_prefix = NULL,
   do_submit = TRUE)
 }
 \arguments{
@@ -27,7 +27,7 @@ star_align_fastq_SE(fastq_paths, index_path = HG38_STAR_INDEX,
 
 \item{out_path}{directory to output to}
 
-\item{out_dirs}{custom output directory per fastq_paths. default is basename
+\item{output_prefix}{custom output directory per fastq_paths. default is basename
 of fastq_paths}
 
 \item{do_submit}{if FALSE, qsub is skipped but submit scripts remain.

@@ -11,7 +11,7 @@
 #' @param n_cores number of threads to use
 #' @param hold_jids job ids to hold for, default NA is none.
 #' @param out_path directory to output to
-#' @param out_dirs custom output directory per fastq_paths. default is basename
+#' @param output_prefix custom output directory per fastq_paths. default is basename
 #' of fastq_paths
 #' @param do_submit if FALSE, qsub is skipped but submit scripts remain.
 #' Default is TRUE.
@@ -30,20 +30,20 @@ star_align_fastq_core = function(FASTQ_VAR,
                                  n_cores = 8,
                                  hold_jids = NA,
                                  out_path = file.path(getwd(), "alignment"),
-                                 out_dirs = NULL,
+                                 output_prefix = NULL,
                                  do_submit = TRUE){
     bfc = BiocFileCache::BiocFileCache(cache_path)
     if(is.list(index_path)) index_path = index_path[[1]]
     stopifnot(length(out_path) == 1)
     dir.create(out_path, showWarnings = FALSE, recursive = TRUE)
-    if(is.null(out_dirs)){
-        out_dirs = sub("\\.fastq.+", "", basename(fastq_paths))
+    if(is.null(output_prefix)){
+        output_prefix = sub("\\.fastq.+", "", basename(fastq_paths))
     }
-    out_dirs = file.path(out_path, out_dirs)
+    output_prefix = file.path(out_path, output_prefix)
     stopifnot(file.exists(index_path))
     stopifnot(all(file.exists(fastq_paths)))
-    stopifnot(length(FASTQ_VAR) == length(out_dirs))
-    stopifnot(!any(duplicated(out_dirs)))
+    stopifnot(length(FASTQ_VAR) == length(output_prefix))
+    stopifnot(!any(duplicated(output_prefix)))
     stopifnot(length(hold_jids) == 1 | length(hold_jids) == length(FASTQ_VAR))
     if(length(hold_jids) == 1){
         hold_jids = rep(hold_jids, length(FASTQ_VAR))
@@ -92,9 +92,9 @@ star_align_fastq_core = function(FASTQ_VAR,
         cmd_this = cmd_align
         cmd_this = sub("FASTQ_VAR", FASTQ_VAR[i], cmd_this)
         cmd_this = sub("THREADS_VAR", n_cores, cmd_this)
-        cmd_this = sub("OUT_VAR", out_dirs[i], cmd_this)
+        cmd_this = sub("OUT_VAR", output_prefix[i], cmd_this)
         
-        bamout = paste0(out_dirs[i], ".bam")
+        bamout = paste0(output_prefix[i], ".bam")
         cmd_index = paste("samtools index", bamout)
         
         bash_lines = c(
@@ -109,16 +109,16 @@ star_align_fastq_core = function(FASTQ_VAR,
             "echo done!"
         )
         j = 1
-        submit_file = file.path(submit_dir, paste0("submit_STAR_align.", basename(out_dirs[i]), ".", j, ".sh"))
+        submit_file = file.path(submit_dir, paste0("submit_STAR_align.", basename(output_prefix[i]), ".", j, ".sh"))
         
         while(file.exists(submit_file)){
             j = j + 1
-            submit_file = file.path(submit_dir, paste0("submit_STAR_align.", basename(out_dirs[i]), ".", j, ".sh"))
+            submit_file = file.path(submit_dir, paste0("submit_STAR_align.", basename(output_prefix[i]), ".", j, ".sh"))
         }
         writeLines(bash_lines, submit_file)
         
-        # if(dir.exists(out_dirs[i])){
-        #     warning(out_dirs[i], " output already exists, delete or submit manually")
+        # if(dir.exists(output_prefix[i])){
+        #     warning(output_prefix[i], " output already exists, delete or submit manually")
         #     all_hjid = c(all_hjid, NULL)
         # }else{
         if(do_submit){
@@ -137,7 +137,7 @@ star_align_fastq_core = function(FASTQ_VAR,
         # }
         
     }
-    return(list(result_paths = out_dirs, job_ids = all_hjid))
+    return(list(result_paths = output_prefix, job_ids = all_hjid))
     
 }
 
@@ -154,7 +154,7 @@ star_align_fastq_core = function(FASTQ_VAR,
 #' @param n_cores number of threads to use
 #' @param hold_jids job ids to hold for, default NA is none.
 #' @param out_path directory to output to
-#' @param out_dirs custom output directory per fastq_paths. default is basename
+#' @param output_prefix custom output directory per fastq_paths. default is basename
 #' of fastq_paths
 #' @param do_submit if FALSE, qsub is skipped but submit scripts remain.
 #' Default is TRUE.
@@ -172,7 +172,7 @@ star_align_fastq_SE = function(fastq_paths,
                                n_cores = 8,
                                hold_jids = NA,
                                out_path = file.path(getwd(), "alignment"),
-                               out_dirs = NULL,
+                               output_prefix = NULL,
                                do_submit = TRUE
 ){
     FASTQ_VAR = fastq_paths
@@ -185,7 +185,7 @@ star_align_fastq_SE = function(fastq_paths,
                           n_cores = n_cores, 
                           hold_jids = hold_jids, 
                           out_path = out_path, 
-                          out_dirs = out_dirs, 
+                          output_prefix = output_prefix, 
                           do_submit = do_submit)
 }
 
@@ -200,7 +200,7 @@ star_align_fastq_SE = function(fastq_paths,
 #' @param n_cores number of threads to use
 #' @param hold_jids job ids to hold for, default NA is none.
 #' @param out_path directory to output to
-#' @param out_dirs custom output directory per fastq_paths. default is basename
+#' @param output_prefix custom output directory per fastq_paths. default is basename
 #' of fastq_paths
 #' @param do_submit if FALSE, qsub is skipped but submit scripts remain.
 #' Default is TRUE.
@@ -221,7 +221,7 @@ star_align_fastq_PE = function(r1_fastq_paths,
                                n_cores = 8,
                                hold_jids = NA,
                                out_path = file.path(getwd(), "alignment"),
-                               out_dirs = paste0(sub(paste0("_", pair_key, "1.fastq"), "", basename(r1_fastq_paths)), ".STAR."),
+                               output_prefix = paste0(sub(paste0("_", pair_key, "1.fastq"), "", basename(r1_fastq_paths)), ".STAR."),
                                do_submit = TRUE
 ){
     if(is.null(r2_fastq_paths)){
@@ -237,7 +237,7 @@ star_align_fastq_PE = function(r1_fastq_paths,
                           n_cores = n_cores, 
                           hold_jids = hold_jids, 
                           out_path = out_path, 
-                          out_dirs = out_dirs, 
+                          output_prefix = output_prefix, 
                           do_submit = do_submit)
 }
 
