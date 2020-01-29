@@ -4,8 +4,10 @@
 \alias{counts_from_bams}
 \title{Title}
 \usage{
-counts_from_bams(bam_paths, p = 8, gtf_path = HG38_v28_GTF_URL,
-  counts_tag = "counts", cache_path = "~/.cache")
+counts_from_bams(bam_paths, n_cores = 8, gtf_path = HG38_v28_GTF_URL,
+  counts_tag = "counts", cache_path = "~/.cache",
+  flip_strand = FALSE, singleEnd = TRUE, inter.feature = FALSE,
+  ignore.strand = FALSE, mode = "IntersectionStrict")
 }
 \description{
 Title

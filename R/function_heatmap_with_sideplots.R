@@ -197,6 +197,9 @@ h.plot_parts_individual = function(ssvH2){
 #' res = ssvHeatmap2(heatmap_demo_matrix)
 #' print(res)
 #' plot(res)
+#' 
+#' res2 = ssvHeatmap2(heatmap_demo_matrix, side_plot_ylab = 'y-value')
+#' plot(res2)
 ssvHeatmap2 = function(
     mat,
     treatment_ordering = NULL,
@@ -220,6 +223,8 @@ ssvHeatmap2 = function(
     main_title.vjust = 1,
     side_plot_type = c("lines1", "lines2", "bars1", "bars2")[1],
     side_plot_FUN = NULL,
+    side_plot_ylab = "",
+    side_plot_ylab_width = .1,
     heatmap_colors = rev(seqsetvis::safeBrew(5, pal = "spectral")),
     symm_colors = TRUE,
     side_plot_colors = NULL
@@ -531,7 +536,16 @@ ssvHeatmap2 = function(
                        pblank,
                        pp_agg_leg,
                        rel_heights = main_heights, ncol = 1)
-
+    if(is.character(side_plot_ylab) & side_plot_ylab != "" & side_plot_ylab_width > 0){
+        pg_ylab = 
+            plot_grid(ggplot() + theme_void() + draw_text(side_plot_ylab, angle = 270),
+                      pblank,
+                      pblank,
+                      pblank,
+                      rel_heights = main_heights, ncol = 1)
+            
+        pg_agg = plot_grid(pg_agg, pg_ylab, rel_widths = c(1-side_plot_ylab_width, side_plot_ylab_width))
+    }
     #STEP 5 - figure assembly
     pg_all = plot_grid(pg_main,
                        pblank,
@@ -566,6 +580,68 @@ ssvHeatmap2 = function(
                                        pagg_parts)
 
     )
+}
+
+#' manually reorder ssvHeatmap2 clusters works with any tidy clustered
+#' data.table too.
+#'
+#' @param hres results of ssvHeatmap2
+#' @param new_cluster_order desired top to bottom cluster order
+#' @param old_cluster_id orginal attribute name for clusters, default is
+#'   "cluster_id"
+#' @param new_cluster_id new attribute name for reordered clusters.  default is
+#'   "cluster_reorder_id". can be same as old_cluster_id if you want to replace
+#'   attribute.
+#'
+#' @return an ssvH2 object if one supplied as hres.  Otherwise a data.table if
+#'   data.table hres supplied.
+#' @export
+#'
+#' @examples
+#' res = ssvHeatmap2(heatmap_demo_matrix)
+#' print(res)
+#' p1 = plot(res)
+#' reorder_res = reoderHeatmapClusters(res, c(5, 4, 2, 3, 1))
+#' p2 = plot(reorder_res)
+#' cowplot::plot_grid(p1, p2)
+#' #works for data.table containing cluster info
+#' reorder_dt = reoderHeatmapClusters(h.cluster_data(res), c(5, 4, 2, 3, 1), new_cluster_id = "cluster_id")
+#' reorder_dt
+reorderHeatmapClusters = function(hres, new_cluster_order, id_var = "id", old_cluster_id = "cluster_id", new_cluster_id = "cluster_reorder_id"){
+    
+    stopifnot(is.numeric(new_cluster_order))
+    man_o = new_cluster_order
+    return_datatable = FALSE
+    if(is.data.table(hres)){
+        c1 = copy(hres)
+        return_datatable = TRUE
+    }else{
+        c1 = copy(hres@cluster_data)
+    }
+    stopifnot(is.data.table(c1))
+    setnames(c1, id_var, "id")
+    c1 = c1[order(id)]
+    
+    stopifnot(setequal(man_o,  c1[[old_cluster_id]]))
+    o = seq(max(man_o))
+    names(o) = man_o
+    
+    assign_dt = unique(c1[, c("id", old_cluster_id), with = FALSE])
+    
+    assign_dt[, manual_cluster_ := o[as.character(get(old_cluster_id))]]
+    assign_dt = assign_dt[order(manual_cluster_, decreasing = TRUE)]
+    assign_dt$id = factor(assign_dt$id, levels = as.character(assign_dt$id))
+    
+    c1$id = factor(c1$id, levels = as.character(assign_dt$id))
+    c1 = merge(c1, assign_dt[, .(id, manual_cluster_)], by = "id")
+    c1 = c1[order(id)]
+    if(old_cluster_id == new_cluster_id){
+        c1[[old_cluster_id]] = NULL
+    }
+    setnames(c1, "manual_cluster_", new_cluster_id)
+    setnames(c1, "id", id_var)
+    if(return_datatable) return(c1)
+    ssvHeatmap2(c1, cluster_ = new_cluster_id)
 }
 
 

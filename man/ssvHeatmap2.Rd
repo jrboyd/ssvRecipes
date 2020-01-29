@@ -12,8 +12,10 @@ ssvHeatmap2(mat, treatment_ordering = NULL, replicate_ordering = NULL,
   nclust = 5, main_title = "Heatmap", main_title.x = 0.02,
   main_title.y = 0.98, main_title.hjust = 0, main_title.vjust = 1,
   side_plot_type = c("lines1", "lines2", "bars1", "bars2")[1],
-  side_plot_FUN = NULL, heatmap_colors = rev(seqsetvis::safeBrew(5, pal
-  = "spectral")), symm_colors = TRUE, side_plot_colors = NULL)
+  side_plot_FUN = NULL, side_plot_ylab = "",
+  side_plot_ylab_width = 0.1,
+  heatmap_colors = rev(seqsetvis::safeBrew(5, pal = "spectral")),
+  symm_colors = TRUE, side_plot_colors = NULL)
 }
 \arguments{
 \item{mat}{numeric matrix with row and column names set.  see details.}
@@ -97,4 +99,7 @@ rownames must be set and be unique.
 res = ssvHeatmap2(heatmap_demo_matrix)
 print(res)
 plot(res)
+
+res2 = ssvHeatmap2(heatmap_demo_matrix, side_plot_ylab = 'y-value')
+plot(res2)
 }

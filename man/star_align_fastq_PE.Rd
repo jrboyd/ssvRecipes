@@ -5,12 +5,13 @@
 \title{Title}
 \usage{
 star_align_fastq_PE(r1_fastq_paths, r2_fastq_paths = NULL,
-  r1_to_r2_FUN = function(r1) {     sub("P1.fastq", "P2.fastq", r1) },
+  pair_key = "P", r1_to_r2_FUN = function(r1) {    
+  sub(paste0(pair_key, "1.fastq"), paste0(pair_key, "2.fastq"), r1) },
   index_path = HG38_STAR_INDEX, gtf_path = HG38_v28_GTF_URL,
-  star_path = STAR_PATH, cache_path = "~/.cache", p = 8,
-  hold_jids = NA, out_path = getwd(),
-  out_dirs = paste0(sub("_P1.fastq", "", basename(r1_fastq_paths)),
-  ".STAR."), do_submit = TRUE)
+  star_path = STAR_PATH, cache_path = "~/.cache", n_cores = 8,
+  hold_jids = NA, out_path = file.path(getwd(), "alignment"),
+  out_dirs = paste0(sub(paste0("_", pair_key, "1.fastq"), "",
+  basename(r1_fastq_paths)), ".STAR."), do_submit = TRUE)
 }
 \arguments{
 \item{r1_fastq_paths}{paths to r1 files, mandatory}
@@ -25,7 +26,7 @@ star_align_fastq_PE(r1_fastq_paths, r2_fastq_paths = NULL,
 
 \item{cache_path}{cache location}
 
-\item{p}{number of threads to use}
+\item{n_cores}{number of threads to use}
 
 \item{hold_jids}{job ids to hold for, default NA is none.}
 

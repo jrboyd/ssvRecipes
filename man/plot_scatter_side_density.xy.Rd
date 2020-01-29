@@ -10,7 +10,7 @@ plot_scatter_side_density.xy(xy_data, x_ = "x", y_ = "y", id_ = "id",
   main_title.hjust = 0, main_title.vjust = 0.5, sets.colors = NULL,
   bg.string = "background", bg.color = "gray70", sets.sizes = 1,
   bg.size = 0.5, xlim_ = NULL, ylim_ = NULL, n_auto_label = 8,
-  manual_label = NULL, label_size = 2, label_color = "black",
+  manual_label = NULL, label_size = 6, label_color = "black",
   label_GEOM = shadowtext::geom_shadowtext, ref_line.x = 0,
   ref_line.x.color = "gray50", ref_line.y = 0,
   ref_line.y.color = "gray50", ref_line.slope = 1,
@@ -117,5 +117,9 @@ comp$scatter = comp$scatter + coord_cartesian(xlim = new_lim, ylim = new_lim)
 comp$x_density = comp$x_density + coord_cartesian(xlim = new_lim)
 comp$y_density = comp$y_density + coord_flip(xlim = new_lim)
 plot_scatter_side_density.assemble(comp, main_title = "new limits")
+
+xy_df = as.data.frame(xy_data[,1:3])
+rownames(xy_df) = xy_data$id
+plot_scatter_side_density.xy(xy_df)
 
 }
