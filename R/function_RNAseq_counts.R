@@ -94,7 +94,7 @@ star_align_fastq_core = function(FASTQ_VAR,
         cmd_this = sub("THREADS_VAR", n_cores, cmd_this)
         cmd_this = sub("OUT_VAR", out_dirs[i], cmd_this)
         
-        bamout = paste0(out_dirs[i], "Aligned.sortedByCoord.out.bam")
+        bamout = paste0(out_dirs[i], ".bam")
         cmd_index = paste("samtools index", bamout)
         
         bash_lines = c(
@@ -317,8 +317,8 @@ counts_from_bams = function(bam_paths,
         
         
         BiocParallel::register(BiocParallel::MulticoreParam(n_cores))
-        ebg = in_list$ebg
-        bamfiles = in_list$bamfiles
+        # ebg = in_list$ebg
+        # bamfiles = in_list$bamfiles
         #single-end reads
         GenomicAlignments::summarizeOverlaps(features=ebg,
                                              reads=bamfiles,
@@ -332,3 +332,66 @@ counts_from_bams = function(bam_paths,
     return(se)
 }
 
+#' rnaseq_asses_strandedness
+#'
+#' @param bam_files path to bam files
+#' @param gtf_path path to gtf with exon info
+#' @param max_bams only this many bams are used
+#'
+#' @return a grob of plots
+#' @export
+#'
+#' @examples
+rnaseq_asses_strandedness = function(bam_files, gtf_path, max_bams = 3){
+    theme_set(cowplot::theme_cowplot())
+    if(length(bam_files) > max_bams){
+        bam_files = sample(bam_files, max_bams)
+    }
+    
+    ex_gr = rtracklayer::import.gff(gtf_path, feature.type = "exon", format = 'gtf')
+    qgr = sample(subset(ex_gr, gene_type == "protein_coding" & width(ex_gr) > 300), 500)
+    names(qgr) = paste0("id_", seq_along(qgr))
+    no_flip_dt = seqsetvis::ssvFetchBam(bam_files, qgr = qgr, 
+                                        win_method = "summary", win_size = 1, 
+                                        summary_FUN = function(x,w)sum(x), fragLens = 1, 
+                                        n_cores = 20, return_data.table = TRUE)
+    yes_flip_dt = seqsetvis::ssvFetchBam(bam_files, qgr = qgr, 
+                                         win_method = "summary", win_size = 1, 
+                                         summary_FUN = function(x,w)sum(x), fragLens = 1, 
+                                         n_cores = 20, return_data.table = TRUE, 
+                                         flip_strand = TRUE)
+    
+    dt = cbind(no_flip_dt[, .(id, no_flip = y)], yes_flip_dt[, .(yes_flip = y)])
+    lim = log10(range(dt$no_flip, dt$yes_flip) +1)
+    p1 = ggplot(dt, aes(x = log10(no_flip+1), y = log10(yes_flip+1))) + geom_point() +
+        annotate("line", x = lim, y = lim, color = "red") +
+        labs(x = "not flipped (log10)", y = "flipped (log10)", title = "flipped vs not flipped")
+    
+    qid_plus = dt[id %in% names(subset(qgr, strand == "+")), .(total = sum(no_flip+yes_flip)), .(id)][order(total, decreasing = TRUE)][1:5]$id
+    qid_neg = dt[id %in% names(subset(qgr, strand == "-")), .(total = sum(no_flip+yes_flip)), .(id)][order(total, decreasing = TRUE)][1:5]$id
+    qid = c(qid_plus, qid_neg)
+    strand(qgr) = "*"
+    no_flip_dt = seqsetvis::ssvFetchBam(data.table(file = bam_files, sample = substr(basename(bam_files), 1, 8)), 
+                                        qgr = resize(qgr[qid], width(qgr)*2, fix = "center"), target_strand = "both",
+                                        win_method = "summary", win_size = 100, 
+                                        summary_FUN = function(x,w)sum(x), fragLens = NA, 
+                                        n_cores = 20,
+                                        return_data.table = TRUE)
+    
+    p2 = ggplot(no_flip_dt[id %in% qid_plus], aes(x = x, y = y, color = strand)) + 
+        geom_path() + facet_grid(id~sample, scales = "free_y") +
+        scale_color_manual(values = c("+" = "red", "-" = "blue")) +
+        labs(title = "not flippped (+)strand", y = "pileup", x = "exon") +
+        theme(legend.position = "bottom", 
+              strip.text = element_text(size = 6),
+              axis.text = element_text(size= 6))
+    p3 = ggplot(no_flip_dt[id %in% qid_neg], aes(x = x, y = y, color = strand)) + 
+        geom_path() + facet_grid(id~sample, scales = "free_y") +
+        scale_color_manual(values = c("+" = "red", "-" = "blue")) +
+        labs(title = "not flippped (-)strand", y = "pileup", x = "exon") +
+        theme(legend.position = "bottom", 
+              strip.text = element_text(size = 6), 
+              axis.text = element_text(size= 6))
+    plot(cowplot::plot_grid(p1, p2, p3, nrow = 1))
+    invisible(list(scatter = p1, tracks_plus = p2, tracks_negative = p3))
+}
