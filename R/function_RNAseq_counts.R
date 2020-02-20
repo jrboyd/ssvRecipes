@@ -37,7 +37,7 @@ star_align_fastq_core = function(FASTQ_VAR,
     stopifnot(length(out_path) == 1)
     dir.create(out_path, showWarnings = FALSE, recursive = TRUE)
     if(is.null(output_prefix)){
-        output_prefix = sub("\\.fastq.+", "", basename(fastq_paths))
+        output_prefix = sub("\\.fastq.+", ".", basename(fastq_paths))
     }
     output_prefix = file.path(out_path, output_prefix)
     stopifnot(file.exists(index_path))
@@ -94,7 +94,7 @@ star_align_fastq_core = function(FASTQ_VAR,
         cmd_this = sub("THREADS_VAR", n_cores, cmd_this)
         cmd_this = sub("OUT_VAR", output_prefix[i], cmd_this)
         
-        bamout = paste0(output_prefix[i], ".bam")
+        bamout = paste0(output_prefix[i], "Aligned.sortedByCoord.out.bam")
         cmd_index = paste("samtools index", bamout)
         
         bash_lines = c(

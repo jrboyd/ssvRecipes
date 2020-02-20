@@ -17,7 +17,7 @@
 #' @import BiocFileCache
 #'
 #' @examples
-bfcif = function(bfc, rname, FUN, force_overwrite = FALSE, return_path_only = FALSE, verbose = FALSE){
+bfcif = function(bfc, rname, FUN, force_overwrite = FALSE, return_path_only = FALSE, verbose = TRUE){
     # is rname in cache?
     if(nrow(BiocFileCache::bfcquery(bfc, query = rname, field = "rname")) == 0){
         if(verbose) message("results not in cache. ", appendLF = FALSE)
