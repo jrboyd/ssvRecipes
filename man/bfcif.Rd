@@ -5,7 +5,7 @@
 \title{bfcif}
 \usage{
 bfcif(bfc, rname, FUN, force_overwrite = FALSE,
-  return_path_only = FALSE, verbose = FALSE)
+  return_path_only = FALSE, verbose = TRUE)
 }
 \arguments{
 \item{return_path_only}{boolean, if TRUE, FUN is never run and cache_path
