@@ -131,14 +131,16 @@ plot_hclust_heatmap = function(x,
               plot.title = element_text(size = 10),
               panel.background = element_blank(), 
               panel.grid = element_blank()) 
-    gg_out = list(heatmap = p, x_dendrogram = px, y_dendrogram = py)
+    
+    pg_assembly = p
     if(dendrogram %in% c("both", "row")){
-        p = cowplot::insert_yaxis_grob(p, py)    
+        pg_assembly = cowplot::insert_yaxis_grob(pg_assembly, py)    
         
     }
     if(dendrogram %in% c("both", "column")){
-        p = cowplot::insert_xaxis_grob(p, px)    
+        pg_assembly = cowplot::insert_xaxis_grob(pg_assembly, px)    
     }
     plot(p)
+    gg_out = list(heatmap = p, x_dendrogram = px, y_dendrogram = py, assembled = pg_assembly)
     invisible(gg_out)
 }
