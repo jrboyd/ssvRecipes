@@ -9,6 +9,9 @@ my_clusterProfiler(qgr, clust_assign, bg_genes = NULL)
 \arguments{
 \item{bg_genes}{}
 }
+\value{
+
+}
 \description{
 Title
 }

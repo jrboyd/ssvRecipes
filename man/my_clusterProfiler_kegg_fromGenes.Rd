@@ -4,11 +4,17 @@
 \alias{my_clusterProfiler_kegg_fromGenes}
 \title{Title}
 \usage{
-my_clusterProfiler_kegg_fromGenes(gene_lists, bg_genes = NULL,
-  force_overwrite = FALSE)
+my_clusterProfiler_kegg_fromGenes(
+  gene_lists,
+  bg_genes = NULL,
+  force_overwrite = FALSE
+)
 }
 \arguments{
 \item{force_overwrite}{}
+}
+\value{
+
 }
 \description{
 Title

@@ -4,12 +4,18 @@
 \alias{my_annotate}
 \title{Title}
 \usage{
-my_annotate(gr,
-  ref_gr = rtracklayer::import.gff("~/gencode.v28.annotation.gtf.gz",
-  feature.type = "transcript", format = "gtf"), gr_size = 2000)
+my_annotate(
+  gr,
+  ref_gr = rtracklayer::import.gff("~/gencode.v28.annotation.gtf.gz", feature.type =
+    "transcript", format = "gtf"),
+  gr_size = 2000
+)
 }
 \arguments{
 \item{gr_size}{}
+}
+\value{
+
 }
 \description{
 Title

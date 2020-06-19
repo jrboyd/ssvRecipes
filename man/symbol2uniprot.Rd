@@ -9,6 +9,9 @@ symbol2uniprot(x)
 \arguments{
 \item{x}{}
 }
+\value{
+
+}
 \description{
 Title
 }

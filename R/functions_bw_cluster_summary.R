@@ -92,27 +92,27 @@ plot_hclust_heatmap = function(x,
     }
     
     if(Rowv){
-        dd.col <- as.dendrogram(hclust(dist(x)))
-        dy <- ggdendro::dendro_data(dd.col)
+        dd.row <- as.dendrogram(hclust(dist(x)))
+        dy <- ggdendro::dendro_data(dd.row)
         py <- ggdend(dy$segments) + coord_flip()
-        col.ord <- order.dendrogram(dd.col)    
+        row.ord <- order.dendrogram(dd.row)    
     }else{
-        col.ord = seq_len(ncol(x))
+        row.ord = seq_len(nrow(x))
     }
     
     if(Colv){
-        dd.row <- as.dendrogram(hclust(dist(t(x))))
-        dx <- ggdendro::dendro_data(dd.row)
+        dd.col <- as.dendrogram(hclust(dist(t(x))))
+        dx <- ggdendro::dendro_data(dd.col)
         px <- ggdend(dx$segments)
-        row.ord <- rev(order.dendrogram(dd.row))    
+        col.ord <- rev(order.dendrogram(dd.col))    
     }else{
-        row.ord = seq_len(nrow(x))
+        col.ord = seq_len(ncol(x))
     }
     
     # x/y dendograms
     
     # heatmap
-    xx <- x[col.ord, row.ord]
+    xx <- x[row.ord, col.ord]
     xx_names <- attr(xx, "dimnames")
     df <- as.data.frame(xx)
     colnames(df) <- xx_names[[2]]

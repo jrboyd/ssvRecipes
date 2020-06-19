@@ -4,11 +4,17 @@
 \alias{my_clusterProfiler_fromGenes}
 \title{Title}
 \usage{
-my_clusterProfiler_fromGenes(gene_lists, bg_genes = NULL,
-  force_overwrite = FALSE)
+my_clusterProfiler_fromGenes(
+  gene_lists,
+  bg_genes = NULL,
+  force_overwrite = FALSE
+)
 }
 \arguments{
 \item{force_overwrite}{}
+}
+\value{
+
 }
 \description{
 Title

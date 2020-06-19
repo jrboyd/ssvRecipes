@@ -9,6 +9,9 @@ cluster_table(cp_res, clust_id = NULL)
 \arguments{
 \item{clust_id}{}
 }
+\value{
+
+}
 \description{
 Title
 }

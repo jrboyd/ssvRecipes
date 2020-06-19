@@ -15,6 +15,9 @@ ggheatmap.dendro(mat, fill = "", title = "", subtitle = "")
 
 \item{subtitle}{}
 }
+\value{
+
+}
 \description{
 Title
 }
