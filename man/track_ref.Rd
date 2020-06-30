@@ -10,7 +10,10 @@ track_ref(
   flip_x = FALSE,
   exon_height = 0.5,
   intron_thickness = 2,
-  debug = FALSE
+  show_tss = FALSE,
+  tss_size = 3,
+  tss_color = "red",
+  return_data = FALSE
 )
 }
 \arguments{
@@ -21,4 +24,13 @@ track_ref(
 }
 \description{
 Title
+}
+\examples{
+ref = rtracklayer::import.gff(ref, format =  "gtf", feature.type = "exon")
+qgr = range(subset(ref, gene_name == "GREB1"))
+qgr
+track_ref(ref, qgr)
+
+track_ref(ref, qgr, show_tss = TRUE)
+
 }

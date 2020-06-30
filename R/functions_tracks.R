@@ -24,12 +24,12 @@ track_chip = function(bw_files, qgr,
     stopifnot(win_FUN %in% c("mean", "max"))
     strand(qgr) = "*"
     rng = c(start(qgr), end(qgr))
-
+    
     sum_FUN = switch (win_FUN,
                       max = function(x, w)max(x),
                       mean = weighted.mean
     )
-
+    
     bw_dt = ssvFetchBigwig(bw_files, qgr,
                            win_method = "summary",  win_size = nwin,
                            summary_FUN = sum_FUN,
@@ -37,16 +37,16 @@ track_chip = function(bw_files, qgr,
     bw_dt$sample = factor(bw_dt$sample, levels = names(bw_files))
     bw_dt[grepl("logFE", sample), y := 10^y]
     bw_dt[y < 1, y := 1]
-
+    
     if(nspline > 1){
         bw_dt = applySpline(bw_dt, n = nspline, by_ = c("sample", "id"))
         bw_dt[, x := (seq_len(.N)-.5) / (.N) * (max(end) - min(start)) + min(start), by = c("sample", "id")]
         bw_dt[y < 1, y := 1]
     }
     # bw_dt = applySpline(bw_dt, n = nspline, by_ = c("sample", "id"))
-
-
-
+    
+    
+    
     p_chip = ggplot(bw_dt) #coord_cartesian(xlim = c(2.5e4, 3.3e4)) +
     if(show_lines){
         p_chip = p_chip + geom_path(aes_string(x = "x", y = "y", color = "sample"))
@@ -63,7 +63,7 @@ track_chip = function(bw_files, qgr,
     if(flip_x){
         p_chip = p_chip +
             scale_x_reverse(labels = function(x)x/10^3, limits = rev(rng))
-
+        
     }else{
         p_chip = p_chip +
             scale_x_continuous(labels = function(x)x/10^3, limits = rng)
@@ -91,11 +91,11 @@ track_rna = function(bams, qgr, flip_x = FALSE, flip_strand = FALSE, max_dupes =
     # ,
     # "MDA231 NSgapmer" = "~/R/KZ_P01_runx_binding_KD_DE/bams/MDA231_NSgapmer_merged.bam",
     # "MDA231 MANCRgapmer" = "~/R/KZ_P01_runx_binding_KD_DE/bams/MDA231_MANCRgapmer_merged.bam")
-
+    
     bam_counts = paste0(bams, ".count")
     names(bam_counts) = names(bams)
     bam_counts = sapply(bam_counts, function(f)read.table(f)[1,1])
-
+    
     bam_dt = ssvRecipes::myFetchStrandedBam(bams, qgr,
                                             return_data.table = TRUE, anchor = "left",
                                             win_size = win_size, flipStrand = flip_strand,
@@ -103,28 +103,28 @@ track_rna = function(bams, qgr, flip_x = FALSE, flip_strand = FALSE, max_dupes =
     for(nam in names(bam_counts)){
         bam_dt[sample == nam, ynorm := y / bam_counts[nam] * mean(bam_counts)]
     }
-
-
+    
+    
     splice_dt = ssvRecipes::myFetchStrandedBam(bams, qgr,
                                                return_data.table = TRUE, anchor = "left",
                                                win_size = win_size, flipStrand = flip_strand,
                                                splice_strategy = "only", max_dupes = max_dupes)
-
+    
     for(nam in names(bam_counts)){
         splice_dt[sample == nam, ynorm := y / bam_counts[nam] * mean(bam_counts)]
     }
-
-
-
+    
+    
+    
     nbam_dt = copy(bam_dt)
     nsplice_dt = copy(splice_dt)
-
+    
     if(strand_upsidedown){
         nbam_dt[strand == "+", ynorm := -ynorm]
         nsplice_dt[strand == "+", ynorm := -ynorm]
     }
-
-
+    
+    
     p_rna = ggplot() + #coord_cartesian(xlim = c(5e4, 7e4)) +
         geom_ribbon(data = nsplice_dt, aes(x = (start + end) / 2, ymin = 0, ymax = ynorm,
                                            fill = sample, group = sample), alpha = .4) +
@@ -142,7 +142,7 @@ track_rna = function(bams, qgr, flip_x = FALSE, flip_strand = FALSE, max_dupes =
         p_rna = p_rna +  facet_wrap("strand", ncol = 1)
     }
     # p_rna
-
+    
     if(flip_x){
         p_rna = p_rna + scale_x_reverse(labels = function(x)x/10^3, limits = rev(rng))
     }else{
@@ -160,35 +160,49 @@ track_rna = function(bams, qgr, flip_x = FALSE, flip_strand = FALSE, max_dupes =
 #' @param debug
 #'
 #' @return
+#' @import IRanges rtracklayer
 #' @export
+#' 
 #'
 #' @examples
+#' ref = rtracklayer::import.gff(ref, format =  "gtf", feature.type = "exon")
+#' qgr = range(subset(ref, gene_name == "GREB1"))
+#' qgr
+#' track_ref(ref, qgr)
+#' 
+#' track_ref(ref, qgr, show_tss = TRUE)
+#' 
 track_ref = function(ref = "~/gencode.v28.annotation.gtf.gz", qgr, flip_x = FALSE,
-                     exon_height = .5, intron_thickness = 2, debug = FALSE){
-    if(debug) browser()
+                     exon_height = .5, intron_thickness = 2, 
+                     show_tss = FALSE, 
+                     tss_size = 3,
+                     tss_color = "red",
+                     return_data = FALSE){
     if(!class(ref) == "GRanges"){
         if(file.exists(ref)){
             ref = rtracklayer::import.gff(ref, format =  "gtf", feature.type = "exon")
         }else{
             stop("ref must be gtf loaded as GRanges or path to gtf")
         }
+    }else{
+        
     }
-    rng = c(start(qgr), end(qgr))
+    rng = c(IRanges::start(qgr), IRanges::end(qgr))
     # ref_gr = rtracklayer::import.gff("~/gencode.v28.annotation.gtf.gz", format =  "gtf", feature.type = "exon")
-    ref_dt = as.data.table(subsetByOverlaps(ref, qgr, ignore.strand = TRUE))
+    ref_dt = as.data.table(IRanges::subsetByOverlaps(ref, qgr, ignore.strand = TRUE))
     # ref_dt = ref_dt[gene_name %in% c("LINC00704", "LINC00705")]
     yvar = "gene_name"
-
+    
     ref_dt[gene_name == "RP11-117P22.1", gene_name := "MANCR"]
     ref_dt[gene_name == "RP11-117P22.2", gene_name := "LINC00705"]
     ref_dt[[yvar]] = factor(ref_dt[[yvar]])
     ref_dt$ymin = as.numeric(ref_dt[[yvar]]) - .5 * exon_height
     ref_dt$ymax = as.numeric(ref_dt[[yvar]]) + .5 * exon_height
-
-
+    
+    
     ref_dt_base = ref_dt[, .(start = min(start), end = max(end), y = mean(c(ymin, ymax)), strand = unique(strand)), by = yvar]
     ref_dt_base = melt(ref_dt_base, id.vars = c("strand", "gene_name", "y"), value.name = "x")
-
+    
     p_ref = ggplot() +
         geom_line(data = ref_dt_base, aes_string(x = "x", y = "y", color = "strand", group = "gene_name"), size = intron_thickness) +
         geom_rect(data = ref_dt, aes(fill = strand, color = strand, xmin = start, xmax = end, ymin = ymin, ymax = ymax)) +
@@ -205,7 +219,7 @@ track_ref = function(ref = "~/gencode.v28.annotation.gtf.gz", qgr, flip_x = FALS
             coord_cartesian(xlim = rev(rng )) +
             scale_fill_manual(values = c("-" = "black", "+" = "darkgray")) +
             scale_color_manual(values = c("-" = "black", "+" = "darkgray"))
-
+        
     }else{
         p_ref = p_ref +
             scale_x_continuous(labels = function(x)x/10^3) +
@@ -213,11 +227,22 @@ track_ref = function(ref = "~/gencode.v28.annotation.gtf.gz", qgr, flip_x = FALS
             scale_fill_manual(values = c("+" = "black", "-" = "darkgray")) +
             scale_color_manual(values = c("+" = "black", "-" = "darkgray"))
     }
-    tss_dt = rbind(
-        ref_dt[strand == "+", .(tss =min(start), y = mean(c(ymin, ymax)), strand = unique(strand)), by = "transcript_id"],
-        ref_dt[strand == "-", .(tss =max(end), y = mean(c(ymin, ymax)), strand = unique(strand)), by = "transcript_id"]
-    )
-    tss_dt
+    tss_dt = ref_dt[, 
+                    .(
+                        tss = ifelse(strand == "+", min(start), max(end)), 
+                        y = mean(c(ymin, ymax)), 
+                        strand = unique(strand),
+                        gene_name = unique(gene_name)
+                    ), 
+                    by = "transcript_id"]
+    if(show_tss){
+        browser()
+        p_ref = p_ref + 
+            geom_point(data = tss_dt, aes(x = tss, y = y), color = tss_color, size = tss_size) +
+            labs(caption = "tss") +
+            theme(plot.caption = element_text(size = 14, color = "red"), legend.position = "bottom")
+    }
+    if(return_data){return(list(ref_dt = ref_dt, tss_dt = tss_dt, label_dt = ref_dt_base))}
     p_ref
 }
 
