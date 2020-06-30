@@ -18,9 +18,8 @@
 track_chip = function(bw_files, qgr,
                       flip_x = FALSE, nwin = 100,
                       win_FUN = c("mean", "max")[1],
-                      nspline = 10, debug = FALSE,
+                      nspline = 10, 
                       show_lines = TRUE, show_fill = FALSE){
-    if(debug) browser()
     stopifnot(win_FUN %in% c("mean", "max"))
     strand(qgr) = "*"
     rng = c(start(qgr), end(qgr))
@@ -236,7 +235,6 @@ track_ref = function(ref = "~/gencode.v28.annotation.gtf.gz", qgr, flip_x = FALS
                     ), 
                     by = "transcript_id"]
     if(show_tss){
-        browser()
         p_ref = p_ref + 
             geom_point(data = tss_dt, aes(x = tss, y = y), color = tss_color, size = tss_size) +
             labs(caption = "tss") +
