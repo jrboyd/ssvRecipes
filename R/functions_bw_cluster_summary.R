@@ -80,7 +80,7 @@ plot_hclust_heatmap = function(x,
         if(dendrogram == "both") dendrogram = "column"
         if(dendrogram == "row") dendrogram = "none"
     }
-    if(!Colv & dendrogram %in% c("both", "row")){
+    if(!Colv & dendrogram %in% c("both", "column")){
         if(dendrogram == "both") dendrogram = "row"
         if(dendrogram == "column") dendrogram = "none"
     }
@@ -112,7 +112,7 @@ plot_hclust_heatmap = function(x,
     # x/y dendograms
     
     # heatmap
-    xx <- x[row.ord, col.ord]
+    xx <- x[row.ord, col.ord, drop = FALSE]
     xx_names <- attr(xx, "dimnames")
     df <- as.data.frame(xx)
     colnames(df) <- xx_names[[2]]
