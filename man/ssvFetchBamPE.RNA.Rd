@@ -16,7 +16,8 @@ ssvFetchBamPE.RNA(
   flip_strand = FALSE,
   sum_reads = TRUE,
   n_cores = getOption("mc.cores", 1),
-  force_skip_centerFix = TRUE
+  force_skip_centerFix = TRUE,
+  n_region_splits = n_region_splits
 )
 }
 \arguments{
@@ -40,6 +41,10 @@ not count spliced regions.  add" counts spliced regions along with others,
 
 \item{return_data.table}{logical. If TRUE the internal data.table is returned
 instead of GRanges.  Default is FALSE.}
+
+\item{n_region_splits}{integer number of splits to apply to qgr. The query
+GRanges will be split into this many roughly equal parts for increased
+parallelization. Default is 1, no split.}
 }
 \value{
 a GRanges (or data.table if return_data.table == TRUE)

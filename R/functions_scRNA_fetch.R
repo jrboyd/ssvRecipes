@@ -1,8 +1,8 @@
 
 #' Title
 #'
-#' @param file_paths character vector of file_paths to load from. Alternatively,
-#' file_paths can be a data.frame or data.table whose first column is a
+#' @param file_path character vector of file_path to load from. Alternatively,
+#' file_path can be a data.frame or data.table whose first column is a
 #' character vector of paths and additial columns will be used as metadata.
 #' @param qgr Set of GRanges to query.  For valid results the width of each
 #'   interval should be identical and evenly divisible by \code{win_size}.
@@ -32,7 +32,7 @@
 #' @export
 #'
 #' @examples
-ssvFetchBam.scRNA = function(file_paths,
+ssvFetchBam.scRNA = function(file_path,
                              qgr,
                              cell_cluster_assignments,
                              cell_cluster_id_ = "seurat_clusters",
@@ -49,70 +49,92 @@ ssvFetchBam.scRNA = function(file_paths,
                              return_data.table = FALSE,
                              max_dupes = Inf,
                              splice_strategy = c("none", "ignore", "add",
-                                                 "only", "splice_count")[1],
+                                                 "only", "splice_count")[2],
                              n_cores = getOption("mc.cores", 1),
                              return_unprocessed = FALSE,
                              force_skip_centerFix = FALSE,
+                             force_barcodes = FALSE,
+                             min_seq_qual = 0,
                              ...){
-
-    if (is.data.frame(file_paths) || is.data.table(file_paths)) {
-        if (ncol(file_paths) == 1) {
+    
+    if (is.data.frame(file_path) || is.data.table(file_path)) {
+        if (ncol(file_path) == 1) {
             file_attribs = data.frame(matrix(
-                0, nrow = nrow(file_paths), ncol = 0
+                0, nrow = nrow(file_path), ncol = 0
             ))
         } else{
-            file_attribs = file_paths[,-1, drop = FALSE]
+            file_attribs = file_path[,-1, drop = FALSE]
         }
         
-        file_paths = file_paths[[1]]
+        file_path = file_path[[1]]
         
     } else{
-        #file_paths is assumed to be a character vector
+        #file_path is assumed to be a character vector
         file_attribs = data.frame(data.frame(matrix(
-            0, nrow = length(file_paths), ncol = 0
+            0, nrow = length(file_path), ncol = 0
         )))
     }
-    if (is.list(file_paths)) {
-        file_paths = unlist(file_paths)
+    if (is.list(file_path)) {
+        file_path = unlist(file_path)
     }
-    if (is.factor(file_paths))
-        file_paths = as.character(file_paths)
-    if (!is.null(unique_names)) {
-        warnings("unique_names is not used for ssvFetchBam.scRNA and should be NULL. See cell_cluster_assignments description for analogous functionality.")
+    if (is.factor(file_path))
+        file_path = as.character(file_path)
+    # if (!is.null(unique_names)) {
+    #     warnings("unique_names is not used for ssvFetchBam.scRNA and should be NULL. See cell_cluster_assignments description for analogous functionality.")
+    # }
+    if(is.null(unique_names)){
+        unique_names = basename(file_path)
     }
-    stopifnot(is.character(file_paths))
+    stopifnot(is.character(file_path))
     stopifnot(is(qgr, "GRanges"))
     stopifnot(is.character(names_variable))
     stopifnot(is.numeric(win_size))
-    stopifnot(file.exists(file_paths))
+    stopifnot(file.exists(file_path))
     #scRNA checks
-    if(is.list(cell_cluster_assignments)){
-        cell_cluster_assignments = rbindlist(lapply(cell_cluster_assignments, function(x){
-            data.table(id = x)
-        }), idcol = cell_cluster_id_)
+    
+    
+    
+    if(is.data.frame(cell_cluster_assignments)){
+        cell_cluster_assignments = copy(cell_cluster_assignments)
+        x = cell_cluster_assignments
+        cell_cluster_assignments = list()
+        for(i in seq_along(file_path)){
+            cell_cluster_assignments[[i]] = x
+        }
     }
-    setnames(cell_cluster_assignments, cell_cluster_id_, "cell_cluster_id")
-    stopifnot("cell_cluster_id" %in% colnames(cell_cluster_assignments))
-    stopifnot("id" %in% colnames(cell_cluster_assignments))
+    cell_cluster_assignments = lapply(cell_cluster_assignments, function(x){
+        if(!is.data.table(x)) x = as.data.table(x)
+        x = copy(x)
+        stopifnot("id" %in% colnames(x))
+        setnames(x, cell_cluster_id_, "cell_cluster_id")
+        stopifnot("cell_cluster_id" %in% colnames(x))
+        x
+    })  
     
-    
-    score_gr_list = parallel::mclapply(seq_along(file_paths), 
-                                          function(i){
-                                              sc_fetch_pileup(file_paths[i],
-                                                              qgr = qgr, 
-                                                              cell_cluster_dt = cell_cluster_assignments,  
-                                                              id_prefix = id_prfixes[i],
-                                                              splice_strategy = splice_strategy)
-                                          })
-    
+    bam_clust_gr_list = parallel::mclapply(seq_along(file_path), 
+                                           function(i){
+                                               sc_fetch_pileup(file_path[i],
+                                                               qgr = qgr, 
+                                                               cell_cluster_dt = cell_cluster_assignments[[i]],  
+                                                               id_prefix = id_prefixes[i],
+                                                               splice_strategy = splice_strategy, 
+                                                               force_barcodes = force_barcodes,
+                                                               min_seq_qual = min_seq_qual)
+                                           })
+    names(bam_clust_gr_list) = unique_names
     if(win_method == "sample"){
-        dt = lapply(score_gr_list, function(score_gr){
-            viewGRangesWinSample_dt(score_gr, qgr, window_size = win_size, anchor = anchor)
-        }) %>% rbindlist(., idcol = "cell_cluster_id")    
+        dt = lapply(bam_clust_gr_list, function(score_gr_list){
+            lapply(score_gr_list, function(score_gr){
+                viewGRangesWinSample_dt(score_gr, qgr, window_size = win_size, anchor = anchor)
+            }) %>% rbindlist(., idcol = "cell_cluster_id")    
+        }) %>% rbindlist(., idcol = "sample") 
+        
     }else if(win_method == "summary"){
-        dt = lapply(score_gr_list, function(score_gr){
-            viewGRangesWinSummary_dt(score_gr, qgr, n_tiles = win_size, anchor = anchor, summary_FUN = summary_FUN)
-        }) %>% rbindlist(., idcol = "cell_cluster_id")    
+        dt = lapply(bam_clust_gr_list, function(score_gr_list){
+            lapply(score_gr_list, function(score_gr){
+                viewGRangesWinSummary_dt(score_gr, qgr, n_tiles = win_size, anchor = anchor, summary_FUN = summary_FUN)
+            }) %>% rbindlist(., idcol = "cell_cluster_id")    
+        }) %>% rbindlist(., idcol = "sample") 
     }else{
         stop("invalid win_method, must be one of 'sample' or 'summary'.")
     }
@@ -121,15 +143,38 @@ ssvFetchBam.scRNA = function(file_paths,
     }else{
         return(GRanges(dt))
     }
-    
-    
+}
+
+#' Title
+#'
+#' @param cell_assignment_list list of character vector cell ids
+#' @param cell_cluster_id_ name to give cell cluster variable in data.table.  Default is "seurat_clusters".
+#'
+#' @return data.table equivalent of input lists.
+#' @export
+#'
+#' @examples
+#' cells_list = list(clust1 = c("a", "b"), clust2 = c("c"))
+#' cells_dt = make_cell_dt_from_list(cells_list)
+#' cells_dt
+make_cell_dt_from_list = function(cell_assignment_list, cell_cluster_id_ = "seurat_clusters"){
+    stopifnot(is.list(cell_assignment_list))
+    if(is.null(names(cell_assignment_list))){
+        names(cell_assignment_list) = paste0("cluster_", seq_along(cell_assignment_list))
+    }
+    cell_assignment_list = rbindlist(lapply(cell_assignment_list, function(x){
+        data.table(id = x)
+    }), idcol = cell_cluster_id_)
+    cell_assignment_list[]
 }
 
 
 sc_fetch_pileup = function(bam_file, qgr, 
                            cell_cluster_dt,
                            id_prefix = NULL,
-                           splice_strategy = c("none", "ignore", "add", "only", "splice_count")[2]){
+                           splice_strategy = c("none", "ignore", "add", "only", "splice_count")[2],
+                           force_barcodes = FALSE,
+                           min_seq_qual = 0){
     what = c("rname", "strand", "pos", "qwidth", "cigar", "CR")
     what = Rsamtools::scanBamWhat()
     sbParam = Rsamtools::ScanBamParam(
@@ -138,16 +183,37 @@ sc_fetch_pileup = function(bam_file, qgr,
         tag = c("CR", "UB"))
     bam_raw = Rsamtools::scanBam(bam_file, param = sbParam)
     
+    mean_phred = function(pq){
+        sapply(as(pq, "IntegerList"), mean)
+    }
+    
     bam_dt = lapply(bam_raw, function(x){
         data.table(seqnames = x$rname, strand = x$strand,
                    # start = x$pos, width = x$qwidth, cigar = x$cigar, id = x$tag$CR, umi = x$tag$UB, seq = as.character(x$seq))
-                   start = x$pos, width = x$qwidth, cigar = x$cigar, id = x$tag$CR, umi = x$tag$UB)
+                   start = x$pos, width = x$qwidth, cigar = x$cigar, id = x$tag$CR, umi = x$tag$UB, mean_seq_qual = mean_phred(x$qual))
     })
+    
     bam_dt = data.table::rbindlist(bam_dt,
                                    use.names = TRUE,
                                    idcol = "which_label")
+    if(min_seq_qual > 0){
+        bam_dt = bam_dt[mean_seq_qual >= min_seq_qual]
+    }
+    
+    if(!force_barcodes)    
+        if(!any(any(cell_cluster_dt$id %in% bam_dt$id))){
+            if(nrow(bam_dt) > 0){
+                message("none of the supplied cell barcodes match barcodes in retrieved reads:")
+                message("supplied ids/barcodes in cell clusters:")
+                message(paste(head(setdiff(cell_cluster_dt$id, bam_dt$id)), collapse = "\n"))
+                message("ids/barcodes found in  reads:")
+                message(paste(head(setdiff(bam_dt$id, cell_cluster_dt$id)), collapse = "\n"))
+                stop("set force_barcodes = TRUE to skip this check.")    
+            }
+        }
     
     bam_dt = bam_dt[!is.na(width)]
+    bam_dt = bam_dt[!is.na(umi)]
     toflip = sub(":-", "", as.character(subset(qgr, strand == "-")))
     target_strand = "+"
     if(target_strand %in% c("+", "-")){
@@ -159,14 +225,14 @@ sc_fetch_pileup = function(bam_file, qgr,
     }
     
     bam_dt[, end := start + width - 1L]
-    bam_dt = bam_dt %>% unique
+    bam_dt = unique(bam_dt)
     
     cig_dt = bam_dt[, .(which_label = paste(which_label, id, umi), cigar, seqnames, start, strand, width)]
     .expand_cigar_dt = seqsetvis:::.expand_cigar_dt
     .expand_cigar_dt_recursive = seqsetvis:::.expand_cigar_dt_recursive
     cig_dt = switch(
         splice_strategy,
-        none = {cig_dt},
+        none = {warning("splice strategy of \"none\" leads to counting at soft-clipped read positions but is faster."); cig_dt},
         ignore = {.expand_cigar_dt(cig_dt)},
         add = {.expand_cigar_dt(cig_dt,
                                 op_2count = c("M", "D", "=", "X", "N"))},
@@ -180,8 +246,14 @@ sc_fetch_pileup = function(bam_file, qgr,
     cig_flat_cell_dt = as.data.table(cig_flat_cell)
     cig_flat_cell_dt$which_label = names(cig_flat_cell)
     
+    if(nrow(cig_flat_cell_dt) > 0){
+        cig_flat_cell_dt[, c('which_label', "id", "umi") := tstrsplit(which_label, " ")]    
+    }else{
+        cig_flat_cell_dt$which_label  = character()
+        cig_flat_cell_dt$id  = character()
+        cig_flat_cell_dt$umi  = character()
+    }
     
-    cig_flat_cell_dt[, c('which_label', "id", "umi") := tstrsplit(which_label, " ")]
     cig_flat_cell_dt = merge(cig_flat_cell_dt, cell_cluster_dt[, .(id, cell_cluster_id)], by = "id")
     cig_flat_cell_dt[, which_label := paste(which_label, cell_cluster_id)]
     #reduce umi to pile of 1
@@ -194,7 +266,7 @@ sc_fetch_pileup = function(bam_file, qgr,
     ext_cov = coverage(split(GRanges(cig_flat_cell_dt), cig_flat_cell_dt$which_label))
     score_gr_list = lapply(ext_cov_list, function(ext_cov){
         score_gr = GRanges(ext_cov)
-        score_gr = harmonize_seqlengths(score_gr, bam_f)
+        score_gr = harmonize_seqlengths(score_gr, bam_file)
         
         if(length(score_gr) == 0){
             score_gr = sbgr

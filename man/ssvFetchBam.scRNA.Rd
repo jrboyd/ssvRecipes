@@ -5,7 +5,7 @@
 \title{Title}
 \usage{
 ssvFetchBam.scRNA(
-  file_paths,
+  file_path,
   qgr,
   cell_cluster_assignments,
   cell_cluster_id_ = "seurat_clusters",
@@ -20,16 +20,18 @@ ssvFetchBam.scRNA(
   names_variable = "sample",
   return_data.table = FALSE,
   max_dupes = Inf,
-  splice_strategy = c("none", "ignore", "add", "only", "splice_count")[1],
+  splice_strategy = c("none", "ignore", "add", "only", "splice_count")[2],
   n_cores = getOption("mc.cores", 1),
   return_unprocessed = FALSE,
   force_skip_centerFix = FALSE,
+  force_barcodes = FALSE,
+  min_seq_qual = 0,
   ...
 )
 }
 \arguments{
-\item{file_paths}{character vector of file_paths to load from. Alternatively,
-file_paths can be a data.frame or data.table whose first column is a
+\item{file_path}{character vector of file_path to load from. Alternatively,
+file_path can be a data.frame or data.table whose first column is a
 character vector of paths and additial columns will be used as metadata.}
 
 \item{qgr}{Set of GRanges to query.  For valid results the width of each

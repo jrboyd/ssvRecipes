@@ -2,18 +2,19 @@
 % Please edit documentation in R/functions_tracks.R
 \name{track_chip}
 \alias{track_chip}
-\title{Title}
+\title{track_chip}
 \usage{
 track_chip(
   bw_files,
   qgr,
+  fetch_fun = seqsetvis::ssvFetchBigwig,
   flip_x = FALSE,
   nwin = 100,
   win_FUN = c("mean", "max")[1],
   nspline = 10,
-  debug = FALSE,
   show_lines = TRUE,
-  show_fill = FALSE
+  show_fill = FALSE,
+  ...
 )
 }
 \arguments{
@@ -23,5 +24,5 @@ track_chip(
 
 }
 \description{
-Title
+track_chip
 }

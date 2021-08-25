@@ -4,8 +4,8 @@
 #' wrapper to handle pileup of standard RNA-seq FR paired end data
 #'
 #' @param file_paths character vector of file_paths to load from. Alternatively,
-#' file_paths can be a data.frame or data.table whose first column is a
-#' character vector of paths and additial columns will be used as metadata.
+#'   file_paths can be a data.frame or data.table whose first column is a
+#'   character vector of paths and additial columns will be used as metadata.
 #' @param qgr Set of GRanges to query.  For valid results the width of each
 #'   interval should be identical and evenly divisible by \code{win_size}.
 #' @param win_size The window size that evenly divides widths in \code{qgr}.
@@ -18,6 +18,9 @@
 #'   "only" will only count spliced regions and ignore others.
 #' @param return_data.table logical. If TRUE the internal data.table is returned
 #'   instead of GRanges.  Default is FALSE.
+#' @param n_region_splits integer number of splits to apply to qgr. The query
+#'   GRanges will be split into this many roughly equal parts for increased
+#'   parallelization. Default is 1, no split.
 #' @return a GRanges (or data.table if return_data.table == TRUE)
 #' @export
 #'
@@ -36,7 +39,7 @@ ssvFetchBamPE.RNA = function(file_paths, qgr, win_size = 50, target_strand = "bo
                          max_dupes = Inf,
                          flip_strand = FALSE, sum_reads = TRUE, 
                          n_cores = getOption("mc.cores", 1),
-                         force_skip_centerFix = TRUE){
+                         force_skip_centerFix = TRUE, n_region_splits = n_region_splits){
     y = cn = NULL #reserve bindings
     strand(qgr) = "*"
     bam_r1 = seqsetvis::ssvFetchBam(
@@ -52,7 +55,8 @@ ssvFetchBamPE.RNA = function(file_paths, qgr, win_size = 50, target_strand = "bo
         flip_strand = flip_strand, 
         max_dupes = max_dupes,
         n_cores = n_cores,
-        force_skip_centerFix = force_skip_centerFix
+        force_skip_centerFix = force_skip_centerFix, 
+        n_region_splits = n_region_splits
     )
     cn = colnames(bam_r1)
     bam_r1$read = "r1"
@@ -71,7 +75,8 @@ ssvFetchBamPE.RNA = function(file_paths, qgr, win_size = 50, target_strand = "bo
             flip_strand = !flip_strand,
             max_dupes = max_dupes,
             n_cores = n_cores,
-            force_skip_centerFix = force_skip_centerFix
+            force_skip_centerFix = force_skip_centerFix,
+            n_region_splits = n_region_splits
         )
     bam_r2$read = "r2"
 

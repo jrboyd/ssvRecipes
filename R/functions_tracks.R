@@ -1,5 +1,5 @@
 
-#' Title
+#' track_chip
 #'
 #' @param bw_files
 #' @param qgr
@@ -16,10 +16,11 @@
 #'
 #' @examples
 track_chip = function(bw_files, qgr,
+                      fetch_fun = seqsetvis::ssvFetchBigwig,
                       flip_x = FALSE, nwin = 100,
                       win_FUN = c("mean", "max")[1],
                       nspline = 10, 
-                      show_lines = TRUE, show_fill = FALSE){
+                      show_lines = TRUE, show_fill = FALSE, ...){
     stopifnot(win_FUN %in% c("mean", "max"))
     strand(qgr) = "*"
     rng = c(start(qgr), end(qgr))
@@ -29,10 +30,10 @@ track_chip = function(bw_files, qgr,
                       mean = weighted.mean
     )
     
-    bw_dt = ssvFetchBigwig(bw_files, qgr,
-                           win_method = "summary",  win_size = nwin,
-                           summary_FUN = sum_FUN,
-                           return_data.table = TRUE, anchor = "left")
+    bw_dt = fetch_fun(bw_files, qgr,
+                      win_method = "summary",  win_size = nwin,
+                      summary_FUN = sum_FUN,
+                      return_data.table = TRUE, anchor = "left", ...)
     bw_dt$sample = factor(bw_dt$sample, levels = names(bw_files))
     bw_dt[grepl("logFE", sample), y := 10^y]
     bw_dt[y < 1, y := 1]
@@ -70,7 +71,7 @@ track_chip = function(bw_files, qgr,
     p_chip
 }
 
-#' Title
+#' track_rna
 #'
 #' @param bams
 #' @param qgr
@@ -84,7 +85,10 @@ track_chip = function(bw_files, qgr,
 #' @export
 #'
 #' @examples
-track_rna = function(bams, qgr, flip_x = FALSE, flip_strand = FALSE, max_dupes = Inf, win_size = 100, strand_upsidedown = TRUE){
+track_rna = function(bams, qgr, 
+                     fetch_fun = ssvRecipes::myFetchStrandedBam,
+                     flip_x = FALSE, flip_strand = FALSE, max_dupes = Inf, 
+                     win_size = 100, strand_upsidedown = TRUE, ...){
     # bams = c("NS gapmer" = "~/R/KZ_P01_runx_binding_KD_DE/bams/MDA231_NSgapmer_merged.bam",
     #          "MANCR gapmer" = "~/R/KZ_P01_runx_binding_KD_DE/bams/MDA231_MANCRgapmer_merged.bam")
     # ,
@@ -95,19 +99,19 @@ track_rna = function(bams, qgr, flip_x = FALSE, flip_strand = FALSE, max_dupes =
     names(bam_counts) = names(bams)
     bam_counts = sapply(bam_counts, function(f)read.table(f)[1,1])
     
-    bam_dt = ssvRecipes::myFetchStrandedBam(bams, qgr,
-                                            return_data.table = TRUE, anchor = "left",
-                                            win_size = win_size, flipStrand = flip_strand,
-                                            splice_strategy = "add", max_dupes = max_dupes)
+    bam_dt = fetch_fun(bams, qgr,
+                       return_data.table = TRUE, anchor = "left",
+                       win_size = win_size, flipStrand = flip_strand,
+                       splice_strategy = "add", max_dupes = max_dupes, ...)
     for(nam in names(bam_counts)){
         bam_dt[sample == nam, ynorm := y / bam_counts[nam] * mean(bam_counts)]
     }
     
     
-    splice_dt = ssvRecipes::myFetchStrandedBam(bams, qgr,
-                                               return_data.table = TRUE, anchor = "left",
-                                               win_size = win_size, flipStrand = flip_strand,
-                                               splice_strategy = "only", max_dupes = max_dupes)
+    splice_dt = fetch_fun(bams, qgr,
+                          return_data.table = TRUE, anchor = "left",
+                          win_size = win_size, flipStrand = flip_strand,
+                          splice_strategy = "only", max_dupes = max_dupes, ...)
     
     for(nam in names(bam_counts)){
         splice_dt[sample == nam, ynorm := y / bam_counts[nam] * mean(bam_counts)]
@@ -150,7 +154,7 @@ track_rna = function(bams, qgr, flip_x = FALSE, flip_strand = FALSE, max_dupes =
     p_rna
 }
 
-#' Title
+#' track_ref
 #'
 #' @param ref
 #' @param qgr

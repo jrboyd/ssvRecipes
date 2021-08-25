@@ -9,7 +9,8 @@ ssvR_plot_bam_mismatch(
   qgr,
   gen_ref = BSgenome.Hsapiens.UCSC.hg38::Hsapiens,
   min_count = 5,
-  as_fraction = FALSE
+  as_fraction = FALSE,
+  return_data = FALSE
 )
 }
 \arguments{

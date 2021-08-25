@@ -2,7 +2,7 @@
 % Please edit documentation in R/functions_tracks.R
 \name{track_ref}
 \alias{track_ref}
-\title{Title}
+\title{track_ref}
 \usage{
 track_ref(
   ref = "~/gencode.v28.annotation.gtf.gz",
@@ -23,7 +23,7 @@ track_ref(
 
 }
 \description{
-Title
+track_ref
 }
 \examples{
 ref = rtracklayer::import.gff(ref, format =  "gtf", feature.type = "exon")

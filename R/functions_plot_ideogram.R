@@ -27,7 +27,7 @@ names(GIE2COL) = c("gneg", "gpos25", "gpos50",
 #' @rawNamespace import(data.table, except = c(shift, first, second, last))
 #' @import BiocFileCache
 #' @examples
-#' ssvR_plot_ideogogram(facet_cols = 2)
+#' ideo_res = ssvR_plot_ideogogram(facet_cols = 2)
 ssvR_plot_ideogogram = function(gen = "hg38",
                                 chr_to_show = paste0("chr", c(1:22, "X", "Y")),
                                 gr_highlights = NULL,
@@ -37,6 +37,7 @@ ssvR_plot_ideogogram = function(gen = "hg38",
                                 highlight_fill = "green",
                                 highlight_color = NA,
                                 highlight_alpha = .5,
+                                highlight_name = "highlight",
                                 facet_cols = 1,
                                 facet_by_row = FALSE,
                                 print_plot = TRUE){
@@ -44,14 +45,14 @@ ssvR_plot_ideogogram = function(gen = "hg38",
         biovizBase::getIdeogram(gen)
     })
     grIdeo = subset(grIdeo, as.character(GenomicRanges::seqnames(grIdeo)) %in% chr_to_show)
-
+    
     full_gr = GenomicRanges::GRanges(
         chr_to_show,
         IRanges::IRanges(1,
                          GenomeInfoDb::seqlengths(grIdeo)[chr_to_show]))
     dfIdeo = data.table::as.data.table(grIdeo)
     chrIdeo = subset(dfIdeo, seqnames %in% chr_to_show)
-
+    
     gie2col = biovizBase::getBioColor("CYTOBAND")
     chrIdeo$fill = gie2col[as.character(chrIdeo$gieStain)]
     chrIdeo$color = NA
@@ -69,12 +70,12 @@ ssvR_plot_ideogogram = function(gen = "hg38",
         }
         chr_to_show = sort(level.byrow(chr_to_show, facet_cols))
     }
-
+    
     chrIdeo$seqnames = factor(chrIdeo$seqnames, levels = chr_to_show)
-
+    
     #https://stackoverflow.com/questions/12888302/facet-wrap-fill-by-column
-
-
+    
+    
     p = ggplot() +
         labs(x = "", y = "") +
         geom_rect(data = chrIdeo[gieStain != "acen"],
@@ -94,7 +95,7 @@ ssvR_plot_ideogogram = function(gen = "hg38",
     # add outline
     acen_gr = GenomicRanges::reduce(subset(grIdeo, gieStain == "acen"))
     outline_df = as.data.frame(GenomicRanges::setdiff(full_gr, acen_gr))
-
+    
     acen_dt = data.table::as.data.table(acen_gr)
     poly_dt = acen_dt[, .(
         xs = c(start, (start+end)/2, end, end, (start+end)/2, start, start),
@@ -115,17 +116,27 @@ ssvR_plot_ideogogram = function(gen = "hg38",
                               ymin = ideo_ymin, ymax = ideo_ymax),
                           fill = highlight_fill, color = highlight_color, alpha = highlight_alpha)
     }
-
+    
     stains = data.frame(stain = unique(chrIdeo$gieStain))
     levels(stains$stain) = c("gneg", "gpos25", "gpos50", "gpos75", "gpos100", "gvar", "acen", "stalk")
     p_leg = ggplot(stains, aes(xmin = 1, xmax = 1, ymin = 1, ymax = 1, fill = stain)) +
         geom_rect(color = "black")+
         scale_fill_manual(values = gie2col[as.character(stains$stain)])
+    h_cols = highlight_color
+    names(h_cols) = highlight_name
+    p_leg2 = ggplot(data.frame(stain = highlight_name), aes(xmin = 1, xmax = 1, ymin = 1, ymax = 1, fill = stain)) +
+        geom_rect(color = "black")+
+        scale_fill_manual(values = h_cols) +
+        labs(fill = "highlight")
     if(print_plot) plot(p)
-    invisible(list(plot = p, legend = cowplot::get_legend(p_leg), data = list(cytobands = chrIdeo[gieStain != "acen"],
-                                                                    centromere = poly_dt,
-                                                                    outline = outline_df,
-                                                                    highlight = highlight_dt)))
+    invisible(list(plot = p, 
+                   legend_stain = cowplot::get_legend(p_leg), 
+                   legend_highlight = cowplot::get_legend(p_leg2),  
+                   plot_assembled = cowplot::plot_grid(nrow = 1, rel_widths = c(.8, .2), p, cowplot::plot_grid(ncol = 1, cowplot::get_legend(p_leg), cowplot::get_legend(p_leg2))),
+                   data = list(cytobands = chrIdeo[gieStain != "acen"],
+                               centromere = poly_dt,
+                               outline = outline_df,
+                               highlight = highlight_dt)))
 }
 
 
@@ -172,16 +183,16 @@ ssvR_plot_ideogogram_data = function(data_dt,
                                      data_ymin = 0, data_ymax = 1,
                                      print_plot = TRUE){
     ideo_res = ssvR_plot_ideogogram(gen = gen,
-                             chr_to_show = chr_to_show,
-                             gr_highlights = gr_highlights,
-                             bfc = bfc,
-                             ideo_ymin = ideo_ymin,
-                             ideo_ymax = ideo_ymax,
-                             highlight_fill = highlight_fill,
-                             highlight_color = highlight_color,
-                             highlight_alpha = highlight_alpha,
-                             facet_cols = facet_cols,
-                             facet_by_row = facet_by_row, print_plot = FALSE)
+                                    chr_to_show = chr_to_show,
+                                    gr_highlights = gr_highlights,
+                                    bfc = bfc,
+                                    ideo_ymin = ideo_ymin,
+                                    ideo_ymax = ideo_ymax,
+                                    highlight_fill = highlight_fill,
+                                    highlight_color = highlight_color,
+                                    highlight_alpha = highlight_alpha,
+                                    facet_cols = facet_cols,
+                                    facet_by_row = facet_by_row, print_plot = FALSE)
     ideo_res$plot
     dt = data.table::copy(data_dt)
     dt = dt[seqnames %in% chr_to_show]
@@ -190,18 +201,18 @@ ssvR_plot_ideogogram_data = function(data_dt,
     dt[, y := y * (data_ymax - data_ymin) + data_ymin]
     bin_size = as.numeric(names(-sort(-table(dt$x[-1] - dt$x[-nrow(dt)])))[1])
     dt[, bin := x / bin_size]
-
+    
     zero_dt = unique(rbind(
         dt[, .(bin = bin[!bin %in% (bin+1)]-1), by = .(seqnames)],
         dt[, .(bin = bin[!bin %in% (bin-1)]+1), by = .(seqnames)]
     ))
-
+    
     pdt = rbind(
         dt[, .(seqnames, x, y)],
         zero_dt[, .(seqnames, x = bin * bin_size + .5 * bin_size, y = NA)]
     )[order(x)][order(seqnames)]
     pdt$seqnames = factor(pdt$seqnames, chr_to_show)
-
+    
     ideo_res$plot = ideo_res$plot + geom_path(data = pdt, aes(x = x, y = y))
     if(print_plot) plot(ideo_res$plot)
     ideo_res$data$line_data = pdt

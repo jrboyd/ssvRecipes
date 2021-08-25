@@ -28,5 +28,5 @@ Imports:
     Rsamtools,
     seqsetvis (>= 1.5.3),
     shadowtext
-RoxygenNote: 7.1.0
+RoxygenNote: 7.1.1
 biocViews: Software, ChIPSeq, Sequencing, Visualization

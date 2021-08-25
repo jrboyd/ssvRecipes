@@ -2,16 +2,18 @@
 % Please edit documentation in R/functions_tracks.R
 \name{track_rna}
 \alias{track_rna}
-\title{Title}
+\title{track_rna}
 \usage{
 track_rna(
   bams,
   qgr,
+  fetch_fun = ssvRecipes::myFetchStrandedBam,
   flip_x = FALSE,
   flip_strand = FALSE,
   max_dupes = Inf,
   win_size = 100,
-  strand_upsidedown = TRUE
+  strand_upsidedown = TRUE,
+  ...
 )
 }
 \arguments{
@@ -21,5 +23,5 @@ track_rna(
 
 }
 \description{
-Title
+track_rna
 }
