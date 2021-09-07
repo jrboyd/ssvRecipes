@@ -32,6 +32,7 @@ ssvR_plot_ideogogram = function(gen = "hg38",
                                 chr_to_show = paste0("chr", c(1:22, "X", "Y")),
                                 gr_highlights = NULL,
                                 bfc = BiocFileCache::BiocFileCache(),
+                                grIdeo = NULL,
                                 ideo_ymin = -1,
                                 ideo_ymax = 0,
                                 highlight_fill = "green",
@@ -40,10 +41,18 @@ ssvR_plot_ideogogram = function(gen = "hg38",
                                 highlight_name = "highlight",
                                 facet_cols = 1,
                                 facet_by_row = FALSE,
-                                print_plot = TRUE){
-    grIdeo = bfcif(bfc, rname = paste("ideo", gen), function(){
-        biovizBase::getIdeogram(gen)
-    })
+                                print_plot = TRUE,
+                                plot_title = ""){
+    if(is.null(grIdeo)){
+        grIdeo = bfcif(bfc, rname = paste("ideo", gen), function(){
+            biovizBase::getIdeogram(gen)
+        })    
+    }
+    ideo_seqnames = as.character(GenomicRanges::seqnames(grIdeo))
+    if(!all(chr_to_show %in% ideo_seqnames)){
+        stop("some chr_to_show missing from grIdeo: ", paste(setdiff(chr_to_show, ideo_seqnames), collapse = ", "))
+    }
+    
     grIdeo = subset(grIdeo, as.character(GenomicRanges::seqnames(grIdeo)) %in% chr_to_show)
     
     full_gr = GenomicRanges::GRanges(
@@ -77,13 +86,12 @@ ssvR_plot_ideogogram = function(gen = "hg38",
     
     
     p = ggplot() +
-        labs(x = "", y = "") +
+        labs(x = "", y = "", title = plot_title) +
         geom_rect(data = chrIdeo[gieStain != "acen"],
                   mapping = aes(xmin = start, xmax = end,
                                 ymin = ideo_ymin, ymax = ideo_ymax,
                                 fill = fill), color = NA) +
         scale_fill_identity() +
-        scale_color_identity() +
         facet_wrap("seqnames", ncol = facet_cols, strip.position = "left") +
         theme(panel.background = element_blank(),
               axis.ticks.y =   element_blank(),
@@ -103,7 +111,7 @@ ssvR_plot_ideogogram = function(gen = "hg38",
         by = .(seqnames)]
     poly_dt$fill = gie2col["acen"]# "darkred"
     poly_dt$color = gie2col["acen"]# "darkred"
-    p = p + geom_polygon(data = poly_dt, aes(x = xs, y = ys, fill = fill, color = color))
+    p = p + geom_polygon(data = poly_dt, aes(x = xs, y = ys, fill = fill), color = gie2col["acen"])
     p = p + geom_rect(data = outline_df,
                       aes(xmin = start, xmax = end,
                           ymin = ideo_ymin, ymax = ideo_ymax), fill = NA, color = "black")
@@ -173,6 +181,7 @@ ssvR_plot_ideogogram_data = function(data_dt,
                                      chr_to_show = paste0("chr", c(1:22, "X", "Y")),
                                      gr_highlights = NULL,
                                      bfc = BiocFileCache::BiocFileCache(),
+                                     grIdeo = NULL,
                                      ideo_ymin = -1,
                                      ideo_ymax = 0,
                                      highlight_fill = "green",
@@ -186,6 +195,7 @@ ssvR_plot_ideogogram_data = function(data_dt,
                                     chr_to_show = chr_to_show,
                                     gr_highlights = gr_highlights,
                                     bfc = bfc,
+                                    grIdeo = grIdeo,
                                     ideo_ymin = ideo_ymin,
                                     ideo_ymax = ideo_ymax,
                                     highlight_fill = highlight_fill,
