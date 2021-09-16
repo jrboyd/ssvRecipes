@@ -9,14 +9,17 @@ ssvR_plot_ideogogram(
   chr_to_show = paste0("chr", c(1:22, "X", "Y")),
   gr_highlights = NULL,
   bfc = BiocFileCache::BiocFileCache(),
+  grIdeo = NULL,
   ideo_ymin = -1,
   ideo_ymax = 0,
   highlight_fill = "green",
   highlight_color = NA,
   highlight_alpha = 0.5,
+  highlight_name = "highlight",
   facet_cols = 1,
   facet_by_row = FALSE,
-  print_plot = TRUE
+  print_plot = TRUE,
+  plot_title = ""
 )
 }
 \arguments{
@@ -29,5 +32,5 @@ ssvR_plot_ideogogram(
 ssvR_plot_ideogogram
 }
 \examples{
-ssvR_plot_ideogogram(facet_cols = 2)
+ideo_res = ssvR_plot_ideogogram(facet_cols = 2)
 }

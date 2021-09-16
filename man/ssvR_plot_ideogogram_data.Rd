@@ -10,6 +10,7 @@ ssvR_plot_ideogogram_data(
   chr_to_show = paste0("chr", c(1:22, "X", "Y")),
   gr_highlights = NULL,
   bfc = BiocFileCache::BiocFileCache(),
+  grIdeo = NULL,
   ideo_ymin = -1,
   ideo_ymax = 0,
   highlight_fill = "green",
