@@ -43,6 +43,7 @@ plot_scatter_side_density.xy(
   label_color = "black",
   label_use_shadow = TRUE,
   label_use_ggrepel = TRUE,
+  label_min.segment.length = 0.5,
   ref_line.x = 0,
   ref_line.x.color = "gray50",
   ref_line.y = 0,

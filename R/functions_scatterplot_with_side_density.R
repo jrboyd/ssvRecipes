@@ -2,27 +2,28 @@
 # library(data.table)
 # library(ggplot2)
 
-get_gg_xrange = function(p){
-    layer_scales(p)$x$range$range 
-}
-get_gg_yrange = function(p){
-    layer_scales(p)$y$range$range 
-}
-
 #' Title
 #'
-#' @param components 
-#' @param main_title 
-#' @param main_title.x 
-#' @param main_title.y 
-#' @param main_title.hjust 
-#' @param main_title.vjust 
-#'
-#' @return
+#' @param components list of components returned by plot_scatter_side_density.xy
+#' @param main_title main title to display at top
+#' @param main_title.x relative x position of title from 0 to 1
+#' @param main_title.y relative y position of title from 0 to 1
+#' @param main_title.hjust horizontal justifcation of title from 0 to 1
+#' @param main_title.vjust vertical justification of title from 0 to 1
+#' @param rel_widths relative width of scatterplot and density plot on right. length of 2.
+#' @param rel_heights relative heights of top density plot and scatterplot. lenght of 2.
+#' 
+#' @rdname plot_scatter_side_density
+#' @return gg object created by cowplot::plot_grid
 #' @export
-#'
-#' @examples
-plot_scatter_side_density.assemble = function(components, main_title = "", main_title.x = .02, main_title.y = .5, main_title.hjust = 0, main_title.vjust = .5, rel_widths = c(2, 1), rel_heights = c(1,2)){
+plot_scatter_side_density.assemble = function(components, 
+                                              main_title = "", 
+                                              main_title.x = .02, 
+                                              main_title.y = .5, 
+                                              main_title.hjust = 0, 
+                                              main_title.vjust = .5, 
+                                              rel_widths = c(2, 1), 
+                                              rel_heights = c(1,2)){
     stopifnot(length(rel_widths) == 2)
     stopifnot(length(rel_heights) == 2)
     p_scatter = components$scatter
@@ -54,34 +55,28 @@ plot_scatter_side_density.assemble = function(components, main_title = "", main_
 }
 
 
-
 #' plot  a scatterplot with sets in color
 #'
-#' @param xy_data 
-#' @param x_ 
-#' @param y_ 
-#' @param id_ 
-#' @param set_ 
-#' @param labs_x 
-#' @param labs_y 
-#' @param labs_sets 
-#' @param main_title 
-#' @param main_title.x 
-#' @param main_title.y 
-#' @param main_title.hjust 
-#' @param main_title.vjust 
-#' @param sets.colors 
-#' @param bg.string
-#' @param bg.color 
-#' @param sets.sizes 
+#' @param xy_data data.frame with 4 required variables defined by x_, y_, id_, and set_
+#' @param x_ character specifying x attribute, default is "x"
+#' @param y_ character specifying y attribute, default is "y"
+#' @param id_ character specifying id attribute, default is "id"
+#' @param set_  character specifying set attribute, default is "set"
+#' @param labs_x label for x-axis, default is value of x_
+#' @param labs_y label for y-axis, default is value of y_
+#' @param labs_sets label for color legend, default is value of set_
+#' @param sets.colors named character vector specify color for sets. See scale_color_manual for details.  Default is to use Dark2 from RColorBrewer.
+#' @param bg.string name for background set (all items)
+#' @param bg.color color for backgorund set (all items)
+#' @param sets.sizes point size for items in sets. Default is 1.
 #' @param bg.size 
-#' @param xlim_ 
-#' @param ylim_ 
-#' @param n_auto_label 
-#' @param manual_label 
-#' @param label_size 
-#' @param label_color 
-#' @param label_use_shadow 
+#' @param xlim_ x limits. Default of NULL is auto.
+#' @param ylim_ y limits. Default of NULL is auto.
+#' @param n_auto_label number of most extreme items to label. Default is 8.
+#' @param manual_label item id values to label. Default is NULL.
+#' @param label_size text size for items in that get labelled (n_auto_label or manual_label). Default is 2. 
+#' @param label_color text color for items in that get labelled (n_auto_label or manual_label). Default is "black".
+#' @param label_use_shadow logical to use shadow for items in that get labelled (n_auto_label or manual_label). Default is TRUE.
 #' @param ref_line.x 
 #' @param ref_line.x.color 
 #' @param ref_line.y 
@@ -89,11 +84,21 @@ plot_scatter_side_density.assemble = function(components, main_title = "", main_
 #' @param ref_line.slope 
 #' @param ref_line.slope.color 
 #' @param suppress_plot 
+#' @param main_title 
+#' @param main_title.x 
+#' @param main_title.y 
+#' @param main_title.hjust 
+#' @param main_title.vjust 
+#' @param label_use_ggrepel 
+#' @param label_min.segment.length
+#' @param rel_widths 
+#' @param rel_heights 
 #'
+#' @rdname plot_scatter_side_density
 #' @return
 #' @export
-#' @import ggplot2 cowplot data.table RColorBrewer
-#'
+#' @import ggplot2 cowplot RColorBrewer
+#' @rawNamespace import(data.table, except = c(shift, first, second, last))
 #' @examples
 #' library(data.table)
 #' library(ggplot2)
@@ -164,6 +169,8 @@ plot_scatter_side_density.xy = function( xy_data,
                                          label_size = 2,
                                          label_color = 'black',
                                          label_use_shadow = TRUE,
+                                         label_use_ggrepel = TRUE,
+                                         label_min.segment.length = .5,
                                          #reference lines
                                          ref_line.x = 0,
                                          ref_line.x.color = "gray50",
@@ -215,7 +222,7 @@ plot_scatter_side_density.xy = function( xy_data,
     sets.len = length(levels(xy_data[[set_]]))
     
     if(is.null(sets.colors)){
-        sets.colors = RColorBrewer::brewer.pal(sets.len, "Dark2")
+        sets.colors = seqsetvis::safeBrew(sets.len, "Dark2")
     }
     stopifnot(length(sets.colors) == sets.len)
     if(is.null(names(sets.colors))){
@@ -316,7 +323,12 @@ plot_scatter_side_density.xy = function( xy_data,
     }
     
     #add labels
-    p_scatter = p_scatter + geom_label(data = xy_data[get(id_) %in% to_label], show.legend = FALSE, size = label_size)
+    if(label_use_ggrepel){
+        p_scatter = p_scatter + ggrepel::geom_label_repel(data = xy_data[get(id_) %in% to_label], show.legend = FALSE, size = label_size, min.segment.length = label_min.segment.length)
+    }else{
+        p_scatter = p_scatter + geom_label(data = xy_data[get(id_) %in% to_label], show.legend = FALSE, size = label_size)    
+    }
+    
     
     components = list(scatter = p_scatter, x_density = p_x_density, y_density = p_y_density)
     
@@ -332,4 +344,12 @@ plot_scatter_side_density.xy = function( xy_data,
     if(!suppress_plot)
         plot(pg)
     invisible(list(assembled = pg, components = components))
+}
+
+
+get_gg_xrange = function(p){
+    layer_scales(p)$x$range$range 
+}
+get_gg_yrange = function(p){
+    layer_scales(p)$y$range$range 
 }

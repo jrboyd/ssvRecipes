@@ -51,7 +51,8 @@ guess_lib = function(dt_stats,
 #'
 #' @return
 #' @export
-#' @import cowplot ggplot2 data.table
+#' @import cowplot ggplot2 
+#' @rawNamespace import(data.table, except = c(shift, first, second, last))
 #' @examples
 #' files = dir("inst/extdata", pattern = "^test_[0-9].ReadsPerGene.out.tab", full = TRUE)
 #' #unstranded

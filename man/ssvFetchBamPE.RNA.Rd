@@ -17,7 +17,7 @@ ssvFetchBamPE.RNA(
   sum_reads = TRUE,
   n_cores = getOption("mc.cores", 1),
   force_skip_centerFix = TRUE,
-  n_region_splits = n_region_splits
+  n_region_splits = 1
 )
 }
 \arguments{

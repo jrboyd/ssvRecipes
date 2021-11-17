@@ -26,3 +26,4 @@ DKSC.monocle_processed.Rds
 *.html
 *.png
 _ncbi_downloads
+mir_nearby_peaks.txt

@@ -39,7 +39,7 @@ ssvFetchBamPE.RNA = function(file_paths, qgr, win_size = 50, target_strand = "bo
                          max_dupes = Inf,
                          flip_strand = FALSE, sum_reads = TRUE, 
                          n_cores = getOption("mc.cores", 1),
-                         force_skip_centerFix = TRUE, n_region_splits = n_region_splits){
+                         force_skip_centerFix = TRUE, n_region_splits = 1){
     y = cn = NULL #reserve bindings
     strand(qgr) = "*"
     bam_r1 = seqsetvis::ssvFetchBam(
