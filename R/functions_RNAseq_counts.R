@@ -342,10 +342,12 @@ counts_from_bams = function(bam_paths,
 #' @export
 #'
 #' @examples
-rnaseq_asses_strandedness = function(bam_files, gtf_path, max_bams = 3){
+rnaseq_asses_strandedness = function(bam_files, gtf_path, sample_names = substr(basename(bam_files), 1, 12), max_bams = 3){
     theme_set(cowplot::theme_cowplot())
     if(length(bam_files) > max_bams){
-        bam_files = sample(bam_files, max_bams)
+        k = sample(bam_files, max_bams) %in% bam_files
+        bam_files = bam_files[k]
+        sample_names = sample_names[k]
     }
     
     ex_gr = rtracklayer::import.gff(gtf_path, feature.type = "exon", format = 'gtf')
@@ -371,7 +373,7 @@ rnaseq_asses_strandedness = function(bam_files, gtf_path, max_bams = 3){
     qid_neg = dt[id %in% names(subset(qgr, strand == "-")), .(total = sum(no_flip+yes_flip)), .(id)][order(total, decreasing = TRUE)][1:5]$id
     qid = c(qid_plus, qid_neg)
     strand(qgr) = "*"
-    no_flip_dt = seqsetvis::ssvFetchBam(data.table(file = bam_files, sample = substr(basename(bam_files), 1, 8)), 
+    no_flip_dt = seqsetvis::ssvFetchBam(data.table(file = bam_files, sample = sample_names), 
                                         qgr = resize(qgr[qid], width(qgr)*2, fix = "center"), target_strand = "both",
                                         win_method = "summary", win_size = 100, 
                                         summary_FUN = function(x,w)sum(x), fragLens = NA, 

@@ -4,7 +4,12 @@
 \alias{rnaseq_asses_strandedness}
 \title{rnaseq_asses_strandedness}
 \usage{
-rnaseq_asses_strandedness(bam_files, gtf_path, max_bams = 3)
+rnaseq_asses_strandedness(
+  bam_files,
+  gtf_path,
+  sample_names = substr(basename(bam_files), 1, 12),
+  max_bams = 3
+)
 }
 \arguments{
 \item{bam_files}{path to bam files}

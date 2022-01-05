@@ -346,7 +346,9 @@ ssvHeatmap2 = function(
         fill_lim = max(abs(fill_lim)) *  c(-1, 1)
     }
     p_groups = lapply(treatment_ordering, function(g){
-        p = ggplot(clust[get(treatment_) == g]) +
+        tmp = clust[get(treatment_) == g]
+        tmp[[row_]] = factor(tmp[[row_]], levels = rev(levels(tmp[[row_]])))
+        p = ggplot(tmp) +
             geom_raster(aes_string(x = replicate_, y = row_, fill = fill_)) +
             scale_fill_gradientn(colours = heatmap_colors, limits = fill_lim) +
             theme(legend.position = "bottom") +
