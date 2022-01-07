@@ -2,9 +2,14 @@
 % Please edit documentation in R/functions_clusterProfiler.R
 \name{my_clusterProfiler_kegg}
 \alias{my_clusterProfiler_kegg}
-\title{Title}
+\title{my_clusterProfiler_kegg}
 \usage{
-my_clusterProfiler_kegg(qgr, clust_assign, bg_genes = NULL)
+my_clusterProfiler_kegg(
+  qgr,
+  clust_assign,
+  bg_genes = NULL,
+  bfc = BiocFileCache::BiocFileCache()
+)
 }
 \arguments{
 \item{bg_genes}{}
@@ -13,5 +18,5 @@ my_clusterProfiler_kegg(qgr, clust_assign, bg_genes = NULL)
 
 }
 \description{
-Title
+my_clusterProfiler_kegg
 }

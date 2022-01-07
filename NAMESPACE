@@ -3,7 +3,7 @@
 export(bfcif)
 export(cache_FUN)
 export(cache_gz)
-export(cluster_table)
+export(clusterProfiler_table)
 export(corr_fragLens)
 export(corr_fragLens.single)
 export(counts_from_bams)

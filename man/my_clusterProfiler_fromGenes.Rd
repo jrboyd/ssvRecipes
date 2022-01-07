@@ -2,12 +2,13 @@
 % Please edit documentation in R/functions_clusterProfiler.R
 \name{my_clusterProfiler_fromGenes}
 \alias{my_clusterProfiler_fromGenes}
-\title{Title}
+\title{my_clusterProfiler_fromGenes}
 \usage{
 my_clusterProfiler_fromGenes(
   gene_lists,
   bg_genes = NULL,
-  force_overwrite = FALSE
+  force_overwrite = FALSE,
+  bfc = BiocFileCache::BiocFileCache()
 )
 }
 \arguments{
@@ -17,5 +18,5 @@ my_clusterProfiler_fromGenes(
 
 }
 \description{
-Title
+my_clusterProfiler_fromGenes
 }

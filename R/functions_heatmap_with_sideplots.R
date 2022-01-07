@@ -187,6 +187,16 @@ h.plot_parts_individual = function(ssvH2){
 #' @param side_plot_colors colors for side_plot.
 #' must be same length as number of treatment groups. default uses dark2
 #' palette from  color brewer.
+#' @param cluster_ variable for cluster assignment
+#' @param fill_label labl for fill legend
+#' @param fill_limits If not NULL, imposes limits on data. 
+#' @param main_title.x main title x position
+#' @param main_title.y main title y position
+#' @param main_title.hjust main title hjust
+#' @param main_title.vjust main title vjust
+#' @param side_plot_ylab label for y-axis of side plot
+#' @param side_plot_ylab_width relative wide of y-lab as a fraction of 1, Default is .1
+#' @param symm_colors If TRUE, limits will be symmetrical.
 #'
 #' @return a ssvH2 object.  print() this object for help.
 #' @export
@@ -197,6 +207,9 @@ h.plot_parts_individual = function(ssvH2){
 #' res = ssvHeatmap2(heatmap_demo_matrix)
 #' print(res)
 #' plot(res)
+#' 
+#' res.lim = ssvHeatmap2(heatmap_demo_matrix, fill_limits = c(-20, 20))
+#' plot(res.lim)
 #' 
 #' res2 = ssvHeatmap2(heatmap_demo_matrix, side_plot_ylab = 'y-value')
 #' plot(res2)
@@ -215,6 +228,7 @@ ssvHeatmap2 = function(
     row_ = "id",
     fill_ = "y",
     fill_label = fill_,
+    fill_limits = NULL,
     nclust = 5,
     main_title = "Heatmap",
     main_title.x = .02,
@@ -341,10 +355,17 @@ ssvHeatmap2 = function(
         clust[[replicate_]] = factor(clust[[replicate_]], levels = replicate_ordering)
     }
 
-    fill_lim = range(clust[[fill_]])
+    if(is.null(fill_limits)){
+        fill_lim = range(clust[[fill_]])
+    }else{
+        fill_lim = fill_limits
+    }
     if(symm_colors){
         fill_lim = max(abs(fill_lim)) *  c(-1, 1)
     }
+    set(clust, which(clust[[fill_]] > max(fill_lim)), fill_, max(fill_lim))
+    set(clust, which(clust[[fill_]] < min(fill_lim)), fill_, min(fill_lim))
+    
     p_groups = lapply(treatment_ordering, function(g){
         tmp = clust[get(treatment_) == g]
         tmp[[row_]] = factor(tmp[[row_]], levels = rev(levels(tmp[[row_]])))
@@ -561,8 +582,8 @@ ssvHeatmap2 = function(
 
     #STEP 6 - output assembly
 
-    clust_assignemnt = unique(clust[, .(get(row_), get(cluster_))])
-    cluster_members = split(clust_assignemnt$V1, clust_assignemnt$V2)
+    clust_assignment = unique(clust[, .(get(row_), get(cluster_))])
+    cluster_members = split(clust_assignment$V1, clust_assignment$V2)
     cluster_members = lapply(cluster_members, as.character)
     new("ssvH2",
         final_plot = list(pg_final),

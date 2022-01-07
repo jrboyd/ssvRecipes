@@ -19,6 +19,7 @@ ssvHeatmap2(
   row_ = "id",
   fill_ = "y",
   fill_label = fill_,
+  fill_limits = NULL,
   nclust = 5,
   main_title = "Heatmap",
   main_title.x = 0.02,
@@ -54,6 +55,8 @@ body, axis ticks, group labels, and scale portion.}
 \item{main_widths}{numeric of length 5.  controls size of heatmap
 body, spacer, cluster bars, cluster connector, and aggregate plots}
 
+\item{cluster_}{variable for cluster assignment}
+
 \item{treatment_}{name of conditions/treatment groups.  appears in plots.}
 
 \item{replicate_}{name of replicate identifier.  appears in plots.}
@@ -67,9 +70,21 @@ matrix.}
 \item{fill_}{name of heatmap fill variable - no effect if supplying mat as
 matrix.}
 
+\item{fill_label}{labl for fill legend}
+
+\item{fill_limits}{If not NULL, imposes limits on data.}
+
 \item{nclust}{numeric number of clusters}
 
 \item{main_title}{title appearing above assembled figure.}
+
+\item{main_title.x}{main title x position}
+
+\item{main_title.y}{main title y position}
+
+\item{main_title.hjust}{main title hjust}
+
+\item{main_title.vjust}{main title vjust}
 
 \item{side_plot_type}{plotting method for aggregate side plots.
 one of c("lines1", "lines2", "bars1", "bars2").}
@@ -79,8 +94,14 @@ once per cluster and must return a ggplot. call is:
 side_plot_FUN(clust, i, fill_, replicate_, treatment_, cluster_, side_plot_colors)
 Where clust is a tidy data.table containing 4 variables_, i is cluster id.}
 
+\item{side_plot_ylab}{label for y-axis of side plot}
+
+\item{side_plot_ylab_width}{relative wide of y-lab as a fraction of 1, Default is .1}
+
 \item{heatmap_colors}{colors for heatmap, default uses spectral palette
 from color brewer.}
+
+\item{symm_colors}{If TRUE, limits will be symmetrical.}
 
 \item{side_plot_colors}{colors for side_plot.
 must be same length as number of treatment groups. default uses dark2
@@ -116,6 +137,9 @@ rownames must be set and be unique.
 res = ssvHeatmap2(heatmap_demo_matrix)
 print(res)
 plot(res)
+
+res.lim = ssvHeatmap2(heatmap_demo_matrix, fill_limits = c(-20, 20))
+plot(res.lim)
 
 res2 = ssvHeatmap2(heatmap_demo_matrix, side_plot_ylab = 'y-value')
 plot(res2)

@@ -1,4 +1,4 @@
-#' Title
+#' my_annotate
 #'
 #' @param gr
 #' @param ref_gr
@@ -35,7 +35,7 @@ symbol2uniprot = function(x){
     bres[!duplicated(bres$SYMBOL),]$UNIPROT
 }
 
-#' Title
+#' my_clusterProfiler_kegg_fromGenes
 #'
 #' @param gene_lists
 #' @param bg_genes
@@ -45,7 +45,7 @@ symbol2uniprot = function(x){
 #' @export
 #'
 #' @examples
-my_clusterProfiler_kegg_fromGenes = function(gene_lists, bg_genes = NULL, force_overwrite = FALSE){
+my_clusterProfiler_kegg_fromGenes = function(gene_lists, bg_genes = NULL, force_overwrite = FALSE, bfc = BiocFileCache::BiocFileCache()){
     gene_lists = lapply(gene_lists, symbol2uniprot)
     if(is.null(bg_genes)){
         bg_genes = unique(unlist(gene_lists))
@@ -83,7 +83,7 @@ my_clusterProfiler_kegg_fromGenes = function(gene_lists, bg_genes = NULL, force_
     res
 }
 
-#' Title
+#' my_clusterProfiler_kegg
 #'
 #' @param qgr
 #' @param clust_assign
@@ -94,7 +94,7 @@ my_clusterProfiler_kegg_fromGenes = function(gene_lists, bg_genes = NULL, force_
 #' @import clusterProfiler 
 #'
 #' @examples
-my_clusterProfiler_kegg = function(qgr, clust_assign, bg_genes = NULL){
+my_clusterProfiler_kegg = function(qgr, clust_assign, bg_genes = NULL, bfc = BiocFileCache::BiocFileCache()){
     peak_dt = as.data.table(qgr)
     peak_dt$name = names(qgr)
     mdt = merge(peak_dt, clust_assign, by.x = "name", by.y = "id")
@@ -154,7 +154,7 @@ my_clusterProfiler_kegg = function(qgr, clust_assign, bg_genes = NULL){
     res
 }
 
-#' Title
+#' my_clusterProfiler_fromGenes
 #'
 #' @param gene_lists
 #' @param bg_genes
@@ -165,7 +165,7 @@ my_clusterProfiler_kegg = function(qgr, clust_assign, bg_genes = NULL){
 #' @import org.Hs.eg.db clusterProfiler
 #'
 #' @examples
-my_clusterProfiler_fromGenes = function(gene_lists, bg_genes = NULL, force_overwrite = FALSE){
+my_clusterProfiler_fromGenes = function(gene_lists, bg_genes = NULL, force_overwrite = FALSE, bfc = BiocFileCache::BiocFileCache()){
     if(is.null(bg_genes)){
         bg_genes = unique(unlist(gene_lists))
     }
@@ -201,7 +201,7 @@ my_clusterProfiler_fromGenes = function(gene_lists, bg_genes = NULL, force_overw
     res
 }
 
-#' Title
+#' my_clusterProfiler
 #'
 #' @param qgr
 #' @param clust_assign
@@ -211,7 +211,7 @@ my_clusterProfiler_fromGenes = function(gene_lists, bg_genes = NULL, force_overw
 #' @export
 #'
 #' @examples
-my_clusterProfiler = function(qgr, clust_assign, bg_genes = NULL){
+my_clusterProfiler = function(qgr, clust_assign, bg_genes = NULL, bfc = BiocFileCache::BiocFileCache()){
     peak_dt = as.data.table(qgr)
     peak_dt$name = names(qgr)
     mdt = merge(peak_dt, clust_assign, by.x = "name", by.y = "id")
@@ -238,7 +238,7 @@ my_clusterProfiler = function(qgr, clust_assign, bg_genes = NULL){
     my_clusterProfiler_fromGenes(gene_lists = gene_lists, bg_genes = bg_genes)
 }
 
-#' Title
+#' clusterProfiler_table
 #'
 #' @param cp_res
 #' @param clust_id
@@ -247,7 +247,7 @@ my_clusterProfiler = function(qgr, clust_assign, bg_genes = NULL){
 #' @export
 #'
 #' @examples
-cluster_table = function(cp_res, clust_id = NULL){
+clusterProfiler_table = function(cp_res, clust_id = NULL){
     cdat = cp_res@compareClusterResult
     cdat = as.data.table(cdat)
 

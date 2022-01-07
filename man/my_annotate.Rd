@@ -2,7 +2,7 @@
 % Please edit documentation in R/functions_clusterProfiler.R
 \name{my_annotate}
 \alias{my_annotate}
-\title{Title}
+\title{my_annotate}
 \usage{
 my_annotate(
   gr,
@@ -18,5 +18,5 @@ my_annotate(
 
 }
 \description{
-Title
+my_annotate
 }
