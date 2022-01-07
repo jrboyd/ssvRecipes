@@ -7,6 +7,9 @@
 my_clusterProfiler_KEGG(
   gene_lists,
   bg_genes = NULL,
+  gene_lists.as_is = FALSE,
+  bg_genes.as_is = FALSE,
+  OrgDb = org.Hs.eg.db::org.Hs.eg.db,
   force_overwrite = FALSE,
   bfc = BiocFileCache::BiocFileCache(),
   organism = c("hsa", "mmu")[1],
@@ -15,6 +18,10 @@ my_clusterProfiler_KEGG(
 )
 }
 \arguments{
+\item{gene_lists}{KEGG requires UNIPROT, gene_lists is expected to be SYMBOL.  If already UNIPROT set gene_lists.as_is = TRUE.}
+
+\item{bg_genes}{KEGG requires UNIPROT, bg_genes is expected to be SYMBOL.  If already UNIPROT set bg_genes.as_is = TRUE.}
+
 \item{force_overwrite}{}
 }
 \value{

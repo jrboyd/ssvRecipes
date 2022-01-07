@@ -13,7 +13,9 @@ my_clusterProfiler_MSigDB(
   pvalueCutoff = 0.05,
   qvalueCutoff = 0.1,
   msigdb_species = c("Homo sapiens", "Mus musculus")[1],
-  msigdb_category
+  msigdb_category = "C8",
+  msigdb_subcategory = NULL,
+  msigdb_TERM2GENE = NULL
 )
 }
 \arguments{

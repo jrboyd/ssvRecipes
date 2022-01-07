@@ -1,5 +1,8 @@
 if(FALSE){
     library(seqsetvis)    
+    library(ssvRecipes)
+    
+    set.seed(0)
     clust_dt = ssvSignalClustering(CTCF_in_10a_profiles_dt)
     clust_dt.assign = unique(clust_dt[, .(id, cluster_id)])
     qgr = CTCF_in_10a_overlaps_gr
@@ -9,12 +12,22 @@ if(FALSE){
                                     feature.type = "transcript", format = "gtf")
     tss_gr = GenomicRanges::promoters(tx_gr, 1, 0)
     
+    bg_genes = unique(tx_gr$gene_name)
+    bg_genes.uni = symbol2uniprot(bg_genes)
+    
+    
     annotate_gr(qgr, tss_gr, max_dist = 1e4)
     gls = annotate_gr_clusters(qgr, clust_dt.assign, tss_gr, max_dist = 1e4)
     
-    my_clusterProfiler_GO(gls)
-    my_clusterProfiler_KEGG(gls)
-    my_clusterProfiler_MSigDB(gls)
+    cprof.go = my_clusterProfiler_GO(gls, bg_genes = bg_genes, pvalueCutoff = 1, qvalueCutoff = 1)
+    cprof.kegg = my_clusterProfiler_KEGG(gls, bg_genes.uni, bg_genes.as_is = TRUE, pvalueCutoff = 1, qvalueCutoff = 1)
+    cprof.msig = my_clusterProfiler_MSigDB(gls, pvalueCutoff = 1, qvalueCutoff = 1)
+    
+    cowplot::plot_grid(
+        cprof.go$dotplot,
+        cprof.kegg$dotplot,
+        cprof.msig$dotplot
+    )
 }
 
 
@@ -29,6 +42,13 @@ if(FALSE){
 #' @export 
 #'
 #' @examples
+#' tx_gr = rtracklayer::import.gff("~/gencode.v36.annotation.gtf",
+#' feature.type = "transcript", format = "gtf")
+#' tss_gr = GenomicRanges::promoters(tx_gr, 1, 0)
+#' 
+#' qgr = CTCF_in_10a_overlaps_gr
+#'     
+#' annotate_gr(qgr, tss_gr, max_dist = 1e4)
 annotate_gr = function(gr,
                        tss_gr,
                        max_dist = 5e3){
@@ -50,6 +70,16 @@ annotate_gr = function(gr,
 #' @export
 #'
 #' @examples
+#' clust_dt = ssvSignalClustering(CTCF_in_10a_profiles_dt)
+#' clust_dt.assign = unique(clust_dt[, .(id, cluster_id)])
+#' qgr = CTCF_in_10a_overlaps_gr
+#' 
+#' tx_gr = rtracklayer::import.gff("~/gencode.v36.annotation.gtf",
+#'                                 feature.type = "transcript", format = "gtf")
+#' tss_gr = GenomicRanges::promoters(tx_gr, 1, 0)
+#' 
+#' annotate_gr(qgr, tss_gr, max_dist = 1e4)
+#' gls = annotate_gr_clusters(qgr, clust_dt.assign, tss_gr, max_dist = 1e4)
 annotate_gr_clusters = function(qgr, clust_assign, tss_gr, max_dist = 5e3){
     peak_dt = data.table::as.data.table(qgr)
     peak_dt$name = names(qgr)
@@ -75,17 +105,17 @@ annotate_gr_clusters = function(qgr, clust_assign, tss_gr, max_dist = 5e3){
 #' @import clusterProfiler
 #'
 #' @examples
-symbol2uniprot = function(x){
+symbol2uniprot = function(x, OrgDb = org.Hs.eg.db::org.Hs.eg.db){
     bres = clusterProfiler::bitr(x, fromType = "SYMBOL",
-                toType = c("UNIPROT"),
-                OrgDb = org.Hs.eg.db::org.Hs.eg.db)
+                                 toType = c("UNIPROT"),
+                                 OrgDb = OrgDb)
     bres[!duplicated(bres$SYMBOL),]$UNIPROT
 }
 
 #' my_clusterProfiler_KEGG
 #'
-#' @param gene_lists
-#' @param bg_genes
+#' @param gene_lists KEGG requires UNIPROT, gene_lists is expected to be SYMBOL.  If already UNIPROT set gene_lists.as_is = TRUE.
+#' @param bg_genes KEGG requires UNIPROT, bg_genes is expected to be SYMBOL.  If already UNIPROT set bg_genes.as_is = TRUE.
 #' @param force_overwrite
 #'
 #' @return
@@ -94,18 +124,28 @@ symbol2uniprot = function(x){
 #' @examples
 my_clusterProfiler_KEGG = function(gene_lists, 
                                    bg_genes = NULL, 
+                                   gene_lists.as_is = FALSE,
+                                   bg_genes.as_is = FALSE,
+                                   OrgDb = org.Hs.eg.db::org.Hs.eg.db,
                                    force_overwrite = FALSE, 
                                    bfc = BiocFileCache::BiocFileCache(), 
                                    organism = c("hsa", "mmu")[1],  
                                    pvalueCutoff  = 0.05,
                                    qvalueCutoff  = 0.1){
-    gene_lists = lapply(gene_lists, symbol2uniprot)
-    if(is.null(bg_genes)){
-        bg_genes = unique(unlist(gene_lists))
+    if(!gene_lists.as_is){
+        gene_lists = lapply(gene_lists, symbol2uniprot, OrgDb = OrgDb)    
     }
     
-    rname_go_dat = digest::digest(list(gene_lists, bg_genes, "kegg"))
-    rname_go_plot = digest::digest(list(gene_lists, bg_genes, "kegg", "plot"))
+    if(is.null(bg_genes)){
+        bg_genes = unique(unlist(gene_lists))
+    }else{
+        if(!bg_genes.as_is){
+            bg_genes = unique(symbol2uniprot(bg_genes, OrgDb = OrgDb))    
+        }
+    }
+    
+    rname_go_dat = digest::digest(list(gene_lists, bg_genes, "kegg", pvalueCutoff, qvalueCutoff))
+    rname_go_plot = digest::digest(list(gene_lists, bg_genes, "kegg", "plot", pvalueCutoff, qvalueCutoff))
     
     res = bfcif(bfc, rname_go_plot, force_overwrite = force_overwrite,
                 function(){
@@ -124,13 +164,13 @@ my_clusterProfiler_KEGG = function(gene_lists,
                                                           pvalueCutoff  = pvalueCutoff,
                                                           qvalueCutoff  = qvalueCutoff)
                                        })
-                            p = ck %>% dotplot
-                            list(ck, p)
+                            p = dotplot(ck)
+                            list(result = ck, dotplot = p)
                         }, error = {
                             function(e){
                                 ck = NULL
                                 p = ggplot() + annotate("text", x = 0, y = 0, label ="no KEGG results")
-                                list(ck, p)
+                                list(result = ck, dotplot = p)
                             }
                         })
                 })
@@ -187,21 +227,54 @@ my_clusterProfiler_MSigDB = function(gene_lists,
                                      pvalueCutoff  = 0.05,
                                      qvalueCutoff  = 0.1,
                                      msigdb_species = c("Homo sapiens", "Mus musculus")[1],
-                                     msigdb_category){
+                                     msigdb_category ="C8",
+                                     msigdb_subcategory = NULL,
+                                     msigdb_TERM2GENE = NULL){
     library(msigdbr)
     library(clusterProfiler)
-    msigdbr_df =  msigdbr::msigdbr(species = "Mus musculus", category = "C8")
-    msigdbr_t2g = msigdbr_df %>% dplyr::distinct(gs_name, gene_symbol) %>% as.data.frame()
+    if(is.null(msigdb_TERM2GENE)){
+        message("getting msigdb_TERM2GENE.")
+        msigdbr_t2g = make_msigdb_TERM2GENE(species = msigdb_species, category = msigdb_category, subcategory = msigdb_subcategory)    
+    }else{
+        message("msigdb_TERM2GENE provided, ignoring any other msigb parameters.")
+        msigdbr_t2g = msigdb_TERM2GENE
+    }
+    
     # enricher(gene = gene_symbols_vector, TERM2GENE = msigdbr_t2g, ...)
     
-    ?clusterProfiler::compareCluster
-    cprof_res = clusterProfiler::compareCluster(
-        geneClusters = gene_lists,
-        fun = "enricher",
-        TERM2GENE = msigdbr_t2g,
-        pvalueCutoff  = pvalueCutoff,
-        qvalueCutoff  = qvalueCutoff
-    )
+    
+    
+    rname_go_dat = digest::digest(list(gene_lists, bg_genes, "msigdb", pvalueCutoff, qvalueCutoff, msigdbr_t2g))
+    rname_go_plot = digest::digest(list(gene_lists, bg_genes, "msigdb", "plot", pvalueCutoff, qvalueCutoff, msigdbr_t2g))
+    
+    res = bfcif(bfc, rname_go_plot, force_overwrite = force_overwrite,
+                function(){
+                    message("calc KEGG res")
+                    tryCatch(
+                        expr = {
+                            ck = bfcif(bfc, rname_go_dat, force_overwrite = force_overwrite,
+                                       function(){
+                                           message("calc compareCluster")
+                                           clusterProfiler::compareCluster(
+                                               geneClusters = gene_lists,
+                                               fun = "enricher",
+                                               TERM2GENE = msigdbr_t2g,
+                                               pvalueCutoff  = pvalueCutoff,
+                                               qvalueCutoff  = qvalueCutoff
+                                           )
+                                           
+                                       })
+                            p = dotplot(ck)
+                            list(result = ck, dotplot = p)
+                        }, error = {
+                            function(e){
+                                ck = NULL
+                                p = ggplot() + annotate("text", x = 0, y = 0, label ="no KEGG results")
+                                list(result = ck, dotplot = p)
+                            }
+                        })
+                })
+    res
     
 }
 
@@ -227,8 +300,8 @@ my_clusterProfiler_GO = function(gene_lists,
     if(is.null(bg_genes)){
         bg_genes = unique(unlist(gene_lists))
     }
-    rname_go_dat = digest::digest(list(gene_lists, bg_genes, "BP"))
-    rname_go_plot = digest::digest(list(gene_lists, bg_genes, "BP", "plot"))
+    rname_go_dat = digest::digest(list(gene_lists, bg_genes, "BP", pvalueCutoff, qvalueCutoff))
+    rname_go_plot = digest::digest(list(gene_lists, bg_genes, "BP", "plot", pvalueCutoff, qvalueCutoff))
     res = bfcif(bfc, rname_go_plot, force_overwrite = force_overwrite, function(){
         message("calc go res")
         tryCatch(
@@ -246,12 +319,12 @@ my_clusterProfiler_GO = function(gene_lists,
                                    qvalueCutoff  = qvalueCutoff)
                 })
                 p = ck %>% simplify %>% dotplot
-                list(ck, p)
+                list(result = ck, dotplot = p)
             }, error = {
                 function(e){
                     ck = NULL
                     p = ggplot() + annotate("text", x = 0, y = 0, label ="no GO results")
-                    list(ck, p)
+                    list(result = ck, dotplot = p)
                 }
             })
     })

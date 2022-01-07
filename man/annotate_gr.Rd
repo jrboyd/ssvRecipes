@@ -15,3 +15,12 @@ annotate_gr(gr, tss_gr, max_dist = 5000)
 \description{
 my_annotate
 }
+\examples{
+tx_gr = rtracklayer::import.gff("~/gencode.v36.annotation.gtf",
+feature.type = "transcript", format = "gtf")
+tss_gr = GenomicRanges::promoters(tx_gr, 1, 0)
+
+qgr = CTCF_in_10a_overlaps_gr
+    
+annotate_gr(qgr, tss_gr, max_dist = 1e4)
+}

@@ -17,3 +17,15 @@ annotate_gr_clusters(qgr, clust_assign, tss_gr, max_dist = 5000)
 \description{
 annotate_gr_clusters
 }
+\examples{
+clust_dt = ssvSignalClustering(CTCF_in_10a_profiles_dt)
+clust_dt.assign = unique(clust_dt[, .(id, cluster_id)])
+qgr = CTCF_in_10a_overlaps_gr
+
+tx_gr = rtracklayer::import.gff("~/gencode.v36.annotation.gtf",
+                                feature.type = "transcript", format = "gtf")
+tss_gr = GenomicRanges::promoters(tx_gr, 1, 0)
+
+annotate_gr(qgr, tss_gr, max_dist = 1e4)
+gls = annotate_gr_clusters(qgr, clust_dt.assign, tss_gr, max_dist = 1e4)
+}

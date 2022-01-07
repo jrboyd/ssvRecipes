@@ -4,7 +4,7 @@
 \alias{symbol2uniprot}
 \title{symbol2uniprot}
 \usage{
-symbol2uniprot(x)
+symbol2uniprot(x, OrgDb = org.Hs.eg.db::org.Hs.eg.db)
 }
 \arguments{
 \item{x}{}
