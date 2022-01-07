@@ -2,7 +2,7 @@
 % Please edit documentation in R/functions_clusterProfiler.R
 \name{symbol2uniprot}
 \alias{symbol2uniprot}
-\title{Title}
+\title{symbol2uniprot}
 \usage{
 symbol2uniprot(x)
 }
@@ -13,5 +13,5 @@ symbol2uniprot(x)
 
 }
 \description{
-Title
+symbol2uniprot
 }
