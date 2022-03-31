@@ -189,6 +189,7 @@ my_clusterProfiler_KEGG = function(gene_lists,
 #'
 #' @return
 #' @export
+#' @import msigdbr
 #'
 #' @examples
 #' # Consult msigdbr for valid inputs

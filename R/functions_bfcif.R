@@ -19,7 +19,7 @@
 #' @examples
 bfcif = function(bfc, rname, FUN, force_overwrite = FALSE, return_path_only = FALSE, verbose = TRUE){
     # is rname in cache?
-    if(nrow(BiocFileCache::bfcquery(bfc, query = rname, field = "rname")) == 0){
+    if(nrow(BiocFileCache::bfcquery(bfc, query = rname, field = "rname", exact = TRUE)) == 0){
         if(verbose) message("results not in cache. ", appendLF = FALSE)
         cache_path = BiocFileCache::bfcnew(bfc, rname = rname)
 
