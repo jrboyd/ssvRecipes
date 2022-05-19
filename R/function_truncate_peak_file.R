@@ -1,10 +1,13 @@
 #' truncate_peak_file
 #'
 #' @param np_file path to .narrowPeak file or any .bed file using the same format
-#' @param order_VAR variable to order by, typically signalValue or pValue
+#' @param order_VAR variable to order by, typically signalValue or pValue.  Must be present in col.names.
 #' @param out_dir output location of truncated peaks, default is input file directory with ".diffbind_input" appended.
 #' @param top_fraction fraction of top ranking peaks to retain. Default is .1
 #' @param top_n number of top ranking peaks to retain. supersedes top_fraction if set. Default is NULL.
+#' @param decreasing same as "decreasing" argument for order(), default is TRUE where high values of order_VAR are good.
+#' @param col.names column names for file.  Default is valid for a .narrowPeak file. order_VAR must match one of these columns
+#' @param sep delimeter to use. Default is tab, "\t"
 #'
 #' @return path to truncated file
 #' @export
@@ -14,13 +17,19 @@
 #'              pattern = "H3K4ME3_pooled_peaks.narrowPeak$", full.names = TRUE)
 #' peaks2.truncated_20percent = sapply(peaks2, truncate_peak_file, order_VAR= "signalValue", top_fraction = .2)
 #' peaks2.truncated_5k = sapply(peaks2, truncate_peak_file, order_VAR= "pValue", top_n = 5e3)
-truncate_peak_file = function(np_file, order_VAR,  out_dir = paste0(dirname(np_file), ".diffbind_input"), top_fraction = .1, top_n = NULL){
-    df = read.table(np_file, col.names = c("seqnames", "start", "end", "id", "score", "strand", "signalValue", "pValue", "qValue", "summit"))
+truncate_peak_file = function(np_file, order_VAR,  
+                              out_dir = paste0(dirname(np_file), ".diffbind_input"), 
+                              top_fraction = .1, 
+                              top_n = NULL, 
+                              decreasing = TRUE, 
+                              col.names = c("seqnames", "start", "end", "id", "score", "strand", "signalValue", "pValue", "qValue", "summit"),
+                              sep = "\t"){
+    df = read.table(np_file, col.names = col.names, sep = sep)
     stopifnot(order_VAR %in% colnames(df))
     if(is.null(top_n)){
         top_n = ceiling(nrow(df)*top_fraction)
     }
-    df = df[order(df[[order_VAR]], decreasing = TRUE),]
+    df = df[order(df[[order_VAR]], decreasing = decreasing),]
     if(top_n < nrow(df)){
         df = df[seq(top_n),]
     }
